@@ -32,7 +32,7 @@
 .idea/**/tasks.xml
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
-.idea/**/shelf
+#.idea/**/shelf
 
 # AWS User-specific
 .idea/**/aws.xml
@@ -222,5 +222,9 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,jetbrains+all,go,vim
 
 ### App ###
+*.prof
+*.pprof
 *.profile
+*.prof.*
+*.pprof.*
 *.profile.*

@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="go test abnf" type="GoTestRunConfiguration" factoryName="Go Test">
+    <module name="abnf" />
+    <working_directory value="$PROJECT_DIR$" />
+    <go_parameters value="-race -vet=all -shuffle=on" />
+    <kind value="DIRECTORY" />
+    <package value="github.com/ghettovoice/abnf" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$" />
+    <output_directory value="$PROJECT_DIR$/out" />
+    <framework value="gotest" />
+    <method v="2" />
+  </configuration>
+</component>
