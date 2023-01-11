@@ -5,7 +5,7 @@
 ## Install
 
 ```bash
-go install github.com/ghettovoice/abnf/...
+go install github.com/ghettovoice/abnf/cmd/abnf@latest
 ```
 
 ## Usage

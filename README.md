@@ -16,7 +16,7 @@ Inspired by:
 Add `abnf` package and all subpackages to your project:
 
 ```bash
-go get github.com/ghettovoice/abnf/...
+go get github.com/ghettovoice/abnf@latest
 ```
 
 ## Usage
