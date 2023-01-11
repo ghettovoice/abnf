@@ -9,11 +9,8 @@ import (
 
 	"github.com/urfave/cli/v2"
 
+	"github.com/ghettovoice/abnf"
 	"github.com/ghettovoice/abnf/pkg/abnf_gen"
-)
-
-var (
-	buildHash, buildTime, buildVersion string
 )
 
 func main() {
@@ -71,9 +68,7 @@ func main() {
 }
 
 func versionAction(_ *cli.Context) error {
-	fmt.Println("Build hash:   ", buildHash)
-	fmt.Println("Build time:   ", buildTime)
-	fmt.Println("Build version:", buildVersion)
+	fmt.Println("Abnf version:", abnf.VERSION)
 	return nil
 }
 
