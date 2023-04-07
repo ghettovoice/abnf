@@ -1,5 +1,5 @@
 package abnf
 
 const (
-	VERSION = "0.1.0" // package version
+	VERSION = "0.1.1" // package version
 )
