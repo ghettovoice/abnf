@@ -1,4 +1,4 @@
-1. Update `VERSION` in `consts.go`.
+1. Update `VERSION` in `abnf.go`.
 2. Commit, push, and release:
 
 ```bash
