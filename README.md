@@ -3,6 +3,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/ghettovoice/abnf.svg)](https://pkg.go.dev/github.com/ghettovoice/abnf)
 [![Tests](https://github.com/ghettovoice/abnf/actions/workflows/test.yml/badge.svg)](https://github.com/ghettovoice/abnf/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/ghettovoice/abnf/badge.svg?branch=master)](https://coveralls.io/github/ghettovoice/abnf?branch=master)
+[![CodeQL](https://github.com/ghettovoice/abnf/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/ghettovoice/abnf/actions/workflows/github-code-scanning/codeql)
 
 Package `abnf` implements ABNF grammar as described in [RFC 5234](https://www.rfc-editor.org/rfc/rfc5234) 
 and [RFC 7405](https://www.rfc-editor.org/rfc/rfc7405).
