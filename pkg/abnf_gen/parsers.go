@@ -284,17 +284,17 @@ func parseRepetitionNode(n abnf.Node) operator {
 	if n.Children[0].IsEmpty() {
 		return parseElementNode(mustGetNode(n, "element"))
 	}
-	min, max := parseRepeatNode(mustGetNode(n, "repeat"))
+	v1, v2 := parseRepeatNode(mustGetNode(n, "repeat"))
 	return repeatOperator{
 		fmtNodeValue(n),
 		parseElementNode(mustGetNode(n, "element")),
-		min, max,
+		v1, v2,
 	}
 }
 
 func parseRepeatNode(n abnf.Node) (min, max uint) {
 	if n.Contains("1*DIGIT") {
-		v, _ := strconv.ParseUint(n.String(), 10, 64)
+		v, _ := strconv.ParseUint(n.String(), 10, 32)
 		return uint(v), uint(v)
 	}
 	astrx := false
@@ -304,10 +304,10 @@ func parseRepeatNode(n abnf.Node) (min, max uint) {
 				continue
 			}
 			if !astrx {
-				v, _ := strconv.ParseUint(n.String(), 10, 64)
+				v, _ := strconv.ParseUint(n.String(), 10, 32)
 				min = uint(v)
 			} else {
-				v, _ := strconv.ParseUint(n.String(), 10, 64)
+				v, _ := strconv.ParseUint(n.String(), 10, 32)
 				max = uint(v)
 			}
 		} else {
