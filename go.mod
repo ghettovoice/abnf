@@ -6,7 +6,7 @@ require (
 	github.com/dave/jennifer v1.7.0
 	github.com/onsi/ginkgo/v2 v2.19.1
 	github.com/onsi/gomega v1.34.1
-	github.com/urfave/cli/v2 v2.27.3
+	github.com/urfave/cli/v2 v2.27.4
 	gopkg.in/yaml.v2 v2.4.0
 )
 
