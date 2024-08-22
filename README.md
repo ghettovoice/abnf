@@ -1,6 +1,7 @@
 # abnf
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/ghettovoice/abnf.svg)](https://pkg.go.dev/github.com/ghettovoice/abnf)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ghettovoice/abnf)](https://goreportcard.com/report/github.com/ghettovoice/abnf)
 [![Tests](https://github.com/ghettovoice/abnf/actions/workflows/test.yml/badge.svg)](https://github.com/ghettovoice/abnf/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/ghettovoice/abnf/badge.svg?branch=master)](https://coveralls.io/github/ghettovoice/abnf?branch=master)
 [![CodeQL](https://github.com/ghettovoice/abnf/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/ghettovoice/abnf/actions/workflows/github-code-scanning/codeql)
