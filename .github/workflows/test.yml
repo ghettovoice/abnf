@@ -27,7 +27,7 @@ jobs:
             - name: Test
               run: make test
 
-            - uses: actions/upload-artifact@v3
+            - uses: actions/upload-artifact@v4
               with:
                   name: coverage_profile
                   path: ./cover.profile
@@ -47,7 +47,7 @@ jobs:
             - name: Install
               run: go install github.com/mattn/goveralls@latest
 
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: coverage_profile
 
