@@ -3,7 +3,7 @@ module github.com/ghettovoice/abnf
 go 1.20
 
 require (
-	github.com/dave/jennifer v1.7.0
+	github.com/dave/jennifer v1.7.1
 	github.com/onsi/ginkgo/v2 v2.20.2
 	github.com/onsi/gomega v1.34.1
 	github.com/urfave/cli/v2 v2.27.4
