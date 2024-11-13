@@ -1,6 +1,8 @@
 module github.com/ghettovoice/abnf
 
-go 1.20
+go 1.22.0
+
+toolchain go1.23.2
 
 require (
 	github.com/dave/jennifer v1.7.0
