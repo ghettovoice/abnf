@@ -15,7 +15,7 @@ type Node struct {
 // String returns the node's value as string.
 func (n *Node) String() string {
 	if n == nil {
-		return "<nil>"
+		return ""
 	}
 	return string(n.Value)
 }
