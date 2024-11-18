@@ -7,7 +7,6 @@
     <package value="github.com/ghettovoice/abnf" />
     <directory value="$PROJECT_DIR$" />
     <filePath value="$PROJECT_DIR$" />
-    <output_directory value="$PROJECT_DIR$/out" />
     <framework value="gotest" />
     <method v="2" />
   </configuration>

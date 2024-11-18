@@ -92,7 +92,9 @@ func configAction(ctx *cli.Context) error {
 		if _, err := os.Stat(confPath); err == nil {
 			v := "no"
 			fmt.Printf("WARN: File %s is already exist. Overwrite? (y, N)\n", confPath)
-			fmt.Scanln(&v)
+			if _, err := fmt.Scanln(&v); err != nil {
+				return cli.Exit(fmt.Errorf("read user input: %w", err), 1)
+			}
 
 			switch strings.ToLower(v) {
 			case "0", "n", "no":
@@ -223,7 +225,9 @@ func generateAction(ctx *cli.Context) error {
 		if _, err := os.Stat(outPath); err == nil {
 			v := "no"
 			fmt.Printf("WARN: File %s is already exist. Overwrite? (y, N)\n", outPath)
-			fmt.Scanln(&v)
+			if _, err := fmt.Scanln(&v); err != nil {
+				return cli.Exit(fmt.Errorf("read user input: %w", err), 1)
+			}
 
 			switch strings.ToLower(v) {
 			case "0", "n", "no":

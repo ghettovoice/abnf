@@ -8,6 +8,8 @@ PKG_PATH=
 setup:
 	go get -v -t ./...
 	go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install golang.org/x/vuln/cmd/govulncheck@latest
 
 build:
 	go build -v -o ./out/abnf ./cmd/...
@@ -22,6 +24,12 @@ test:
 watch:
 	ginkgo version
 	ginkgo watch $(GINKGO_WATCH_FLAGS) $(GINKGO_FLAGS) ./$(PKG_PATH)
+
+lint:
+	golangci-lint version
+	golangci-lint run ./...
+	govulncheck -version
+	govulncheck ./...
 
 cover-report:
 	go tool cover -html=./cover.profile
