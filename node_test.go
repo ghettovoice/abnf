@@ -7,12 +7,12 @@ import (
 	"github.com/ghettovoice/abnf"
 )
 
-var _ = Describe("Abnf", func() {
+var _ = Describe("ABNF", func() {
 	Describe("Node", func() {
-		var n abnf.Node
+		var n *abnf.Node
 
 		BeforeEach(func() {
-			n = abnf.Node{
+			n = &abnf.Node{
 				Key:   "ab",
 				Value: []byte("abcc"),
 				Children: abnf.Nodes{
@@ -25,17 +25,9 @@ var _ = Describe("Abnf", func() {
 		})
 
 		It("should search starting from self", func() {
-			nn, ok := n.GetNode("ab")
-			Expect(nn).Should(Equal(n))
-			Expect(ok).Should(BeTrue())
-
-			nn, ok = n.GetNode("a")
-			Expect(nn).Should(Equal(abnf.Node{Key: "a", Value: []byte("a")}))
-			Expect(ok).Should(BeTrue())
-
-			nn, ok = n.GetNode("d")
-			Expect(nn).Should(BeZero())
-			Expect(ok).Should(BeFalse())
+			Expect(n.GetNode("ab")).Should(Equal(n))
+			Expect(n.GetNode("a")).Should(Equal(&abnf.Node{Key: "a", Value: []byte("a")}))
+			Expect(n.GetNode("d")).Should(BeZero())
 		})
 	})
 
@@ -73,13 +65,8 @@ var _ = Describe("Abnf", func() {
 		})
 
 		It("should search one", func() {
-			n, ok := ns.Get("d")
-			Expect(n).Should(Equal(abnf.Node{Key: "d", Value: []byte("d")}))
-			Expect(ok).Should(BeTrue())
-
-			n, ok = ns.Get("h")
-			Expect(n).Should(BeZero())
-			Expect(ok).Should(BeFalse())
+			Expect(ns.Get("d")).Should(Equal(&abnf.Node{Key: "d", Value: []byte("d")}))
+			Expect(ns.Get("h")).Should(BeZero())
 		})
 
 		It("should search all", func() {
@@ -90,7 +77,7 @@ var _ = Describe("Abnf", func() {
 		})
 
 		It("should search best", func() {
-			Expect(ns.Best()).Should(Equal(abnf.Node{
+			Expect(ns.Best()).Should(Equal(&abnf.Node{
 				Key:   "abcd",
 				Value: []byte("abcd"),
 				Children: abnf.Nodes{
@@ -107,7 +94,7 @@ var _ = Describe("Abnf", func() {
 				},
 			}))
 
-			Expect(ns[:1].Best()).Should(Equal(abnf.Node{
+			Expect(ns[:1].Best()).Should(Equal(&abnf.Node{
 				Key:   "abc",
 				Value: []byte("abc"),
 				Children: abnf.Nodes{

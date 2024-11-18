@@ -21,7 +21,7 @@ func literal(key string, val []byte, ci bool) Operator {
 			}
 		}
 
-		return append(ns, Node{
+		return append(ns, &Node{
 			Key:   key,
 			Value: s[:len(val)],
 		})
@@ -58,7 +58,7 @@ func Range(key string, low, high []byte) Operator {
 			return nil
 		}
 
-		return append(ns, Node{
+		return append(ns, &Node{
 			Key:   key,
 			Value: s[:l],
 		})
@@ -69,12 +69,13 @@ func alt(key string, fm bool, oprts ...Operator) Operator {
 	return func(s []byte, ns Nodes) Nodes {
 		subns := newNodes()
 		for _, op := range oprts {
-			subns = op(s, subns[:0])
+			subns.clear()
+			subns = op(s, subns)
 			for _, sn := range subns {
-				ns = append(ns, Node{
+				ns = append(ns, &Node{
 					Key:      key,
 					Value:    s[:len(sn.Value)],
-					Children: Nodes{sn},
+					Children: append(newNodes(), sn),
 				})
 			}
 			if len(subns) > 0 && fm {
@@ -108,25 +109,35 @@ func concat(key string, all bool, oprts ...Operator) Operator {
 			return ns
 		}
 
-		ns = append(ns, Node{Key: key, Value: s[:0]})
+		ns = append(ns, &Node{Key: key, Value: s[:0]})
 		newns := newNodes()
 		subns := newNodes()
 		for _, op := range oprts {
-			newns = newns[:0]
+			newns.clear()
 			for _, n := range ns {
-				for _, sn := range op(s[len(n.Value):], subns[:0]) {
-					newns = append(newns, Node{
-						Key:   n.Key,
-						Value: s[:len(n.Value)+len(sn.Value)],
-						// TODO reduce children allocations
-						Children: append(append(make(Nodes, 0, len(n.Children)+1), n.Children...), sn),
-					})
+				subns.clear()
+				subns = op(s[len(n.Value):], subns)
+				for _, sn := range subns {
+					var nn *Node
+					if len(subns) == 1 {
+						nn = n
+						nn.Value = s[:len(n.Value)+len(sn.Value)]
+						nn.Children = append(n.Children, sn)
+					} else {
+						nn = &Node{
+							Key:      n.Key,
+							Value:    s[:len(n.Value)+len(sn.Value)],
+							Children: append(append(newNodes(), n.Children...), sn),
+						}
+					}
+					newns = append(newns, nn)
 				}
 			}
 			if len(newns) > 0 {
-				ns = append(ns[:0], newns...)
+				ns.clear()
+				ns = append(ns, newns...)
 			} else {
-				ns = ns[:0]
+				ns.clear()
 				break
 			}
 		}
@@ -135,6 +146,8 @@ func concat(key string, all bool, oprts ...Operator) Operator {
 
 		if len(ns) > 1 && !all {
 			ns[0] = ns.Best()
+			ns1 := ns[1:]
+			ns1.clear()
 			ns = ns[:1]
 		}
 		return ns
@@ -170,7 +183,7 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 		}
 
 		if min == 0 {
-			ns = append(ns, Node{Key: key, Value: s[:0]})
+			ns = append(ns, &Node{Key: key, Value: s[:0]})
 		} else {
 			ns = minp(s, ns)
 			if len(ns) == 0 {
@@ -181,24 +194,32 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 			return ns
 		}
 
-		curns := append(newNodes()[:0], ns...)
+		curns := append(newNodes(), ns...)
 		newns := newNodes()
 		subns := newNodes()
 		var i uint
 		for i = min; i < max || max == 0; i++ {
-			newns = newns[:0]
+			newns.clear()
 			for _, n := range curns {
-				for _, sn := range op(s[len(n.Value):], subns[:0]) {
-					newns = append(newns, Node{
-						Key:   n.Key,
-						Value: s[:len(n.Value)+len(sn.Value)],
-						// TODO reduce children allocations
-						Children: append(append(make(Nodes, 0, len(n.Children)+1), n.Children...), sn),
+				subns.clear()
+				subns = op(s[len(n.Value):], subns)
+				for _, sn := range subns {
+					var chns Nodes
+					if len(subns) == 1 {
+						chns = append(n.Children, sn)
+					} else {
+						chns = append(append(newNodes(), n.Children...), sn)
+					}
+					newns = append(newns, &Node{
+						Key:      n.Key,
+						Value:    s[:len(n.Value)+len(sn.Value)],
+						Children: chns,
 					})
 				}
 			}
 			if len(newns) > 0 && newns.Compare(curns) == 1 {
-				curns = append(curns[:0], newns...)
+				curns.clear()
+				curns = append(curns, newns...)
 				ns = append(ns, newns...)
 			} else {
 				break

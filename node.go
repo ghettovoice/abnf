@@ -13,55 +13,70 @@ type Node struct {
 }
 
 // String returns the node's value as string.
-func (n Node) String() string {
+func (n *Node) String() string {
+	if n == nil {
+		return "<nil>"
+	}
 	return string(n.Value)
 }
 
 // Len returns length of the node's value.
-func (n Node) Len() int {
+func (n *Node) Len() int {
+	if n == nil {
+		return 0
+	}
 	return len(n.Value)
 }
 
 // IsEmpty returns true if the node's value length = 0.
-func (n Node) IsEmpty() bool {
-	return len(n.Value) == 0
-}
+func (n *Node) IsEmpty() bool { return n == nil || len(n.Value) == 0 }
 
 // Contains returns whether the subtree contains the given key.
-func (n Node) Contains(key string) bool {
-	_, ok := n.GetNode(key)
-	return ok
+func (n *Node) Contains(key string) bool {
+	if n == nil {
+		return false
+	}
+	return n.GetNode(key) != nil
 }
 
 // GetNode recursively searches a node with the given key starting from itself.
 // Returns found node and true on success, empty node and false on failure.
-func (n Node) GetNode(key string) (Node, bool) {
+func (n *Node) GetNode(key string) *Node {
 	if n.Key == key {
-		return n, true
+		return n
 	}
 	return n.Children.Get(key)
 }
 
 // GetNodes recursively searches all nodes with the given key starting from itself.
-func (n Node) GetNodes(key string) Nodes {
+func (n *Node) GetNodes(key string) Nodes {
+	if n == nil {
+		return nil
+	}
+
 	var ns Nodes
 	if n.Key == key {
 		ns = append(ns, n)
 	}
-	for _, n := range n.Children.GetAll(key) {
-		ns = append(ns, n)
-	}
+	ns = append(ns, n.Children.GetAll(key)...)
 	return ns
 }
 
 // Compare compares node values via [bytes.Compare].
 // The result will be 0 if n.Value == other.Value, -1 if n.Value < other.Value, and +1 if n.Value > other.Value.
-func (n Node) Compare(other Node) int {
+func (n *Node) Compare(other *Node) int {
+	if n == other {
+		return 0
+	} else if n == nil {
+		return -1
+	} else if other == nil {
+		return 1
+	}
 	return bytes.Compare(n.Value, other.Value)
 }
 
 // Nodes represents a list of nodes.
-type Nodes []Node
+type Nodes []*Node
 
 // Contains returns whether the subtree contains the given key.
 func (ns Nodes) Contains(key string) bool {
@@ -74,16 +89,16 @@ func (ns Nodes) Contains(key string) bool {
 }
 
 // Get recursively searches a node with the given key.
-func (ns Nodes) Get(key string) (Node, bool) {
+func (ns Nodes) Get(key string) *Node {
 	for _, n := range ns {
 		if n.Key == key {
-			return n, true
+			return n
 		}
-		if n, ok := n.Children.Get(key); ok {
-			return n, true
+		if n := n.Children.Get(key); n != nil {
+			return n
 		}
 	}
-	return Node{}, false
+	return nil
 }
 
 // GetAll recursively searches all nodes with the given key.
@@ -99,9 +114,9 @@ func (ns Nodes) GetAll(key string) Nodes {
 }
 
 // Best returns a node with the longest value.
-func (ns Nodes) Best() Node {
+func (ns Nodes) Best() *Node {
 	if len(ns) == 0 {
-		return Node{}
+		return nil
 	}
 	best := ns[0]
 	for _, n := range ns[1:] {
@@ -119,21 +134,27 @@ func (ns Nodes) Compare(other Nodes) int {
 }
 
 var nodesPool = sync.Pool{
-	New: func() any { return make(Nodes, 0, 1) },
+	New: func() any {
+		ns := make(Nodes, 0, 10)
+		return &ns
+	},
 }
 
 func newNodes() Nodes {
-	return nodesPool.Get().(Nodes)[:0]
+	ns := nodesPool.Get().(*Nodes)
+	ns.clear()
+	return *ns
 }
 
-func (ns Nodes) free() {
-	nodesPool.Put(ns[:0])
+func (ns *Nodes) clear() {
+	clear(*ns)
+	*ns = (*ns)[:0]
 }
 
-func freeNodesChildren(ns Nodes) {
-	for _, n := range ns {
-		if n.Children != nil {
-			n.Children.free()
-		}
+func (ns *Nodes) free() {
+	ns.clear()
+	if cap(*ns) > 1000 {
+		return
 	}
+	nodesPool.Put(ns)
 }

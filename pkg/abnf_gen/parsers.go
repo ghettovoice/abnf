@@ -200,10 +200,10 @@ func parseRules(s []byte) (map[string]rule, error) {
 	return parseRuleslistNode(n), nil
 }
 
-func parseRuleslistNode(n abnf.Node) map[string]rule {
+func parseRuleslistNode(n *abnf.Node) map[string]rule {
 	rules := make(map[string]rule)
 	for _, n := range n.Children {
-		if n, ok := n.GetNode("rule"); ok {
+		if n := n.GetNode("rule"); n != nil {
 			newRule := parseRuleNode(n)
 			if foundRule, ok := rules[newRule.name]; ok && newRule.extend {
 				rules[newRule.name] = mergeRules(newRule.name, foundRule, newRule)
@@ -240,7 +240,7 @@ func mergeRules(n string, r1, r2 rule) rule {
 	}
 }
 
-func parseRuleNode(n abnf.Node) rule {
+func parseRuleNode(n *abnf.Node) rule {
 	return rule{
 		name:   mustGetNode(n, "rulename").String(),
 		oprt:   parseAlternationNode(mustGetNode(n, "alternation")),
@@ -248,13 +248,13 @@ func parseRuleNode(n abnf.Node) rule {
 	}
 }
 
-func parseAlternationNode(n abnf.Node) operator {
+func parseAlternationNode(n *abnf.Node) operator {
 	ops := []operator{
 		parseConcatenationNode(mustGetNode(n, "concatenation")),
 	}
 	// traverse '*(*c-wsp "/" *c-wsp concatenation)' part
 	for _, n := range n.Children[1].Children {
-		if n, ok := n.GetNode("concatenation"); ok {
+		if n := n.GetNode("concatenation"); n != nil {
 			ops = append(ops, parseConcatenationNode(n))
 		}
 	}
@@ -264,13 +264,13 @@ func parseAlternationNode(n abnf.Node) operator {
 	return altOperator{fmtNodeValue(n), ops}
 }
 
-func parseConcatenationNode(n abnf.Node) operator {
+func parseConcatenationNode(n *abnf.Node) operator {
 	ops := []operator{
 		parseRepetitionNode(mustGetNode(n, "repetition")),
 	}
 	// traverse '*(1*c-wsp repetition)' part
 	for _, n := range n.Children[1].Children {
-		if n, ok := n.GetNode("repetition"); ok {
+		if n := n.GetNode("repetition"); n != nil {
 			ops = append(ops, parseRepetitionNode(n))
 		}
 	}
@@ -280,7 +280,7 @@ func parseConcatenationNode(n abnf.Node) operator {
 	return concatOperator{fmtNodeValue(n), ops}
 }
 
-func parseRepetitionNode(n abnf.Node) operator {
+func parseRepetitionNode(n *abnf.Node) operator {
 	if n.Children[0].IsEmpty() {
 		return parseElementNode(mustGetNode(n, "element"))
 	}
@@ -292,7 +292,7 @@ func parseRepetitionNode(n abnf.Node) operator {
 	}
 }
 
-func parseRepeatNode(n abnf.Node) (min, max uint) {
+func parseRepeatNode(n *abnf.Node) (min, max uint) {
 	if n.Contains("1*DIGIT") {
 		v, _ := strconv.ParseUint(n.String(), 10, 32)
 		return uint(v), uint(v)
@@ -317,7 +317,7 @@ func parseRepeatNode(n abnf.Node) (min, max uint) {
 	return
 }
 
-func parseElementNode(n abnf.Node) operator {
+func parseElementNode(n *abnf.Node) operator {
 	switch n := n.Children[0]; n.Key {
 	case "rulename":
 		return parseRulenameNode(n)
@@ -336,26 +336,26 @@ func parseElementNode(n abnf.Node) operator {
 	}
 }
 
-func parseRulenameNode(n abnf.Node) operator {
+func parseRulenameNode(n *abnf.Node) operator {
 	return ruleNameOperator{fmtNodeValue(n)}
 }
 
-func parseGroupNode(n abnf.Node) operator {
+func parseGroupNode(n *abnf.Node) operator {
 	return parseAlternationNode(mustGetNode(n, "alternation"))
 }
 
-func parseOptionNode(n abnf.Node) operator {
+func parseOptionNode(n *abnf.Node) operator {
 	return optionOperator{fmtNodeValue(n), parseAlternationNode(mustGetNode(n, "alternation"))}
 }
 
-func parseCharValNode(n abnf.Node) operator {
+func parseCharValNode(n *abnf.Node) operator {
 	return charValOperator{
 		fmtNodeValue(mustGetNode(n, "*(%x20-21 / %x23-7E)")),
 		n.Contains("case-sensitive-string"),
 	}
 }
 
-func parseNumValNode(n abnf.Node) operator {
+func parseNumValNode(n *abnf.Node) operator {
 	vn := n.Children[1].Children[0]
 	var (
 		valKey string
@@ -387,19 +387,19 @@ func parseNumValNode(n abnf.Node) operator {
 	return numValOperator{fmtNodeValue(n), typ, vals, isRange}
 }
 
-func parseProseValNode(_ abnf.Node) operator {
+func parseProseValNode(_ *abnf.Node) operator {
 	panic("prose-val isn't supported")
 }
 
 var spRegex = regexp.MustCompile(`\s+`)
 
-func fmtNodeValue(n abnf.Node) string {
+func fmtNodeValue(n *abnf.Node) string {
 	return strings.TrimSpace(spRegex.ReplaceAllString(n.String(), " "))
 }
 
-func mustGetNode(n abnf.Node, key string) abnf.Node {
-	sn, ok := n.GetNode(key)
-	if !ok {
+func mustGetNode(n *abnf.Node, key string) *abnf.Node {
+	sn := n.GetNode(key)
+	if sn == nil {
 		panic(fmt.Errorf("node '%s' not found", key))
 	}
 	return sn
