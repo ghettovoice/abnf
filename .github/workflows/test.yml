@@ -19,7 +19,7 @@ jobs:
             - name: Set up Go
               uses: actions/setup-go@v5
               with:
-                  go-version: '^1.22'
+                  go-version: '^1.24'
 
             - name: Set up project
               run: make setup
@@ -36,7 +36,7 @@ jobs:
             - name: Set up Go
               uses: actions/setup-go@v5
               with:
-                  go-version: '^1.22'
+                  go-version: '^1.24'
 
             - name: Set up project
               run: make setup
@@ -59,7 +59,7 @@ jobs:
             - name: Set up Go
               uses: actions/setup-go@v5
               with:
-                  go-version: '^1.22'
+                  go-version: '^1.24'
 
             - name: Install
               run: go install github.com/mattn/goveralls@latest
