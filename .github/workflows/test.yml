@@ -55,7 +55,6 @@ jobs:
         needs: [test]
         permissions:
             contents: read
-            secrets: read
         steps:
             - uses: actions/checkout@v4
 
