@@ -6,10 +6,7 @@ GINKGO_WATCH_FLAGS=${GINKGO_BASE_FLAGS}
 PKG_PATH=
 
 setup:
-	go get -v -t ./...
-	go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-	go install golang.org/x/vuln/cmd/govulncheck@latest
+	go mod tidy
 
 build:
 	go build -v -o ./out/abnf ./cmd/...
@@ -18,20 +15,20 @@ install:
 	go install -v ./cmd/...
 
 test:
-	ginkgo version
-	ginkgo $(GINKGO_TEST_FLAGS) $(GINKGO_FLAGS) ./$(PKG_PATH)
+	@go tool ginkgo version
+	go tool ginkgo $(GINKGO_TEST_FLAGS) $(GINKGO_FLAGS) ./$(PKG_PATH)
 
 watch:
-	ginkgo version
-	ginkgo watch $(GINKGO_WATCH_FLAGS) $(GINKGO_FLAGS) ./$(PKG_PATH)
+	@go tool ginkgo version
+	go tool ginkgo watch $(GINKGO_WATCH_FLAGS) $(GINKGO_FLAGS) ./$(PKG_PATH)
 
 lint:
-	golangci-lint run -v ./...
-	govulncheck -version ./...
+	go tool golangci-lint run -v ./...
+	go tool govulncheck -version ./...
 
 cover-report:
 	go tool cover -html=./cover.profile
 
 doc:
 	@echo "Running documentation on http://localhost:8080/github.com/ghettovoice/abnf"
-	pkgsite -http=localhost:8080
+	go tool pkgsite -http=localhost:8080
