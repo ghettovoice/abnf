@@ -1,22 +1,25 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"net/mail"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/ghettovoice/abnf"
 	"github.com/ghettovoice/abnf/pkg/abnf_gen"
 )
 
 func main() {
-	app := &cli.App{
-		Name:  "abnf",
-		Usage: "Generates parsers from ABNF grammar (RFC 5234, RFC 7405)",
+	cmd := &cli.Command{
+		Name:                  "abnf",
+		Usage:                 "Generates parsers from ABNF grammar (RFC 5234, RFC 7405)",
+		EnableShellCompletion: true,
+		Suggest:               true,
 		Commands: []*cli.Command{
 			{
 				Name:    "version",
@@ -55,43 +58,46 @@ func main() {
 				Action: generateAction,
 			},
 		},
-		EnableBashCompletion: true,
-		Suggest:              true,
-	}
-	sort.Sort(cli.FlagsByName(app.Flags))
-	sort.Sort(cli.CommandsByName(app.Commands))
-	for _, cmd := range app.Commands {
-		sort.Sort(cli.FlagsByName(cmd.Flags))
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "verbose",
+				Aliases: []string{"v"},
+				Usage:   "Enables verbose output",
+			},
+		},
+		Authors: []any{
+			mail.Address{Name: "Vladimir Vershinin", Address: "ghettovoice@gmail.com"},
+		},
 	}
 
-	cli.HandleExitCoder(app.Run(os.Args))
+	cli.HandleExitCoder(cmd.Run(context.Background(), os.Args))
 }
 
-func versionAction(_ *cli.Context) error {
+func versionAction(_ context.Context, _ *cli.Command) error {
 	fmt.Println("Abnf version:", abnf.VERSION)
 	return nil
 }
 
 const defaultConfPath = "abnf.yml"
 
-func configAction(ctx *cli.Context) error {
+func configAction(_ context.Context, cmd *cli.Command) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return cli.Exit(fmt.Errorf("get working directory: %w", err), 1)
 	}
 
 	confPath := defaultConfPath
-	if ctx.Args().Len() > 0 {
-		if v := strings.TrimSpace(ctx.Args().First()); v != "" {
+	if cmd.Args().Len() > 0 {
+		if v := strings.TrimSpace(cmd.Args().First()); v != "" {
 			confPath = v
 		}
 	}
 	confPath = makePath(confPath, wd)
 
-	if !ctx.Bool("y") {
+	if !cmd.Bool("y") {
 		if _, err := os.Stat(confPath); err == nil {
 			v := "no"
-			fmt.Printf("WARN: File %s is already exist. Overwrite? (y, N)\n", confPath)
+			fmt.Printf("File %s is already exist. Overwrite? (y, N)\n", confPath)
 			if _, err := fmt.Scanln(&v); err != nil {
 				return cli.Exit(fmt.Errorf("read user input: %w", err), 1)
 			}
@@ -105,7 +111,7 @@ func configAction(ctx *cli.Context) error {
 
 	fd, err := os.OpenFile(confPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return cli.Exit(fmt.Errorf("open output file %s: %w", confPath, err), 1)
+		return cli.Exit(fmt.Errorf("open output file: %w", err), 1)
 	}
 	defer fd.Close()
 
@@ -128,7 +134,7 @@ external:
 `,
 	))
 	if err != nil {
-		return cli.Exit(fmt.Errorf("write config file %s: %w", confPath, err), 1)
+		return cli.Exit(fmt.Errorf("write config file: %w", err), 1)
 	}
 
 	fmt.Printf("config written to file %s\n", confPath)
@@ -136,7 +142,7 @@ external:
 	return nil
 }
 
-func generateAction(ctx *cli.Context) error {
+func generateAction(_ context.Context, cmd *cli.Command) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return cli.Exit(fmt.Errorf("get working directory: %w", err), 1)
@@ -144,14 +150,14 @@ func generateAction(ctx *cli.Context) error {
 
 	// read config
 	confPath := defaultConfPath
-	if v := ctx.String("config"); len(v) > 0 {
+	if v := cmd.String("config"); len(v) > 0 {
 		confPath = v
 	}
 	confPath = makePath(confPath, wd)
 
 	buf, err := os.ReadFile(confPath)
 	if err != nil {
-		return cli.Exit(fmt.Errorf("read config file %s: %w", confPath, err), 1)
+		return cli.Exit(fmt.Errorf("read config file: %w", err), 1)
 	}
 
 	cfg, err := parseConfig(buf)
@@ -182,7 +188,9 @@ func generateAction(ctx *cli.Context) error {
 					PackageName: entry.Name,
 				}
 
-				fmt.Printf("external rule %s (%s.%s) registered\n", rule, entry.Path, entry.Name)
+				if cmd.Bool("verbose") {
+					fmt.Printf("external rule %s (%s.%s) registered\n", rule, entry.Path, entry.Name)
+				}
 			}
 		}
 	}
@@ -196,13 +204,13 @@ func generateAction(ctx *cli.Context) error {
 		in = makePath(in, filepath.Dir(confPath))
 		fd, err := os.Open(in)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("open ABNF file %s: %w", in, err))
+			errs = append(errs, fmt.Errorf("open ABNF file: %w", err))
 			continue
 		}
 
 		if _, err = g.ReadFrom(fd); err != nil {
 			fd.Close()
-			errs = append(errs, fmt.Errorf("read, parse ABNF file %s: %w", in, err))
+			errs = append(errs, fmt.Errorf("parse ABNF file %s: %w", in, err))
 			continue
 		}
 
@@ -221,10 +229,10 @@ func generateAction(ctx *cli.Context) error {
 	}
 	outPath = makePath(outPath, filepath.Dir(confPath))
 
-	if !ctx.Bool("y") {
+	if !cmd.Bool("y") {
 		if _, err := os.Stat(outPath); err == nil {
 			v := "no"
-			fmt.Printf("WARN: File %s is already exist. Overwrite? (y, N)\n", outPath)
+			fmt.Printf("File %s is already exist. Overwrite? (y, N)\n", outPath)
 			if _, err := fmt.Scanln(&v); err != nil {
 				return cli.Exit(fmt.Errorf("read user input: %w", err), 1)
 			}
@@ -238,7 +246,7 @@ func generateAction(ctx *cli.Context) error {
 
 	fd, err := os.OpenFile(outPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return cli.Exit(fmt.Errorf("open output file %s: %w", outPath, err), 1)
+		return cli.Exit(fmt.Errorf("open output file: %w", err), 1)
 	}
 	defer fd.Close()
 
