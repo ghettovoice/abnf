@@ -75,6 +75,38 @@ func fmtPubRuleName(n string) string {
 	return nn
 }
 
+var reservedWords = map[string]bool{
+	"any":         true,
+	"bool":        true,
+	"break":       true,
+	"byte":        true,
+	"case":        true,
+	"chan":        true,
+	"close":       true,
+	"const":       true,
+	"continue":    true,
+	"default":     true,
+	"defer":       true,
+	"else":        true,
+	"fallthrough": true,
+	"for":         true,
+	"func":        true,
+	"go":          true,
+	"goto":        true,
+	"if":          true,
+	"import":      true,
+	"interface":   true,
+	"map":         true,
+	"package":     true,
+	"range":       true,
+	"return":      true,
+	"select":      true,
+	"struct":      true,
+	"switch":      true,
+	"type":        true,
+	"var":         true,
+}
+
 func fmtPrivRuleName(n string) string {
 	words := strings.Split(n, "-")
 	var nn string
@@ -87,6 +119,9 @@ func fmtPrivRuleName(n string) string {
 				break
 			}
 		}
+	}
+	if reservedWords[nn] {
+		return nn + "_"
 	}
 	return nn
 }
