@@ -3,5 +3,6 @@
 
 ```bash
 git commit -m "Release vM.m.p"
-git push
+git tag vM.m.p
+git push --follow-tags
 ```

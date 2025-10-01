@@ -176,8 +176,9 @@ func TestCodeGenerator_ExtendRule(t *testing.T) {
 	if _, err := g.ReadFrom(rules); err != nil {
 		t.Fatal(err)
 	}
-
-	g.ReadFrom(bytes.NewReader([]byte("r1 =/ \"4\"\n")))
+	if _, err := g.ReadFrom(bytes.NewReader([]byte("r1 =/ \"4\"\n"))); err != nil {
+		t.Fatal(err)
+	}
 
 	var dst bytes.Buffer
 	if _, err := g.WriteTo(&dst); err != nil {

@@ -26,9 +26,8 @@ lint:
 	go tool golangci-lint run -v ./...
 	go tool govulncheck -version ./...
 
-cover-report:
+cov:
 	go tool cover -html=./cover.profile
 
-doc:
-	@echo "Running documentation on http://localhost:8080/github.com/ghettovoice/abnf"
-	go tool pkgsite -http=localhost:8080
+docs:
+	go tool doc -http
