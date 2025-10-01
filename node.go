@@ -40,7 +40,7 @@ func (n *Node) Contains(key string) bool {
 }
 
 // GetNode recursively searches a node with the given key starting from itself.
-// Returns found node and true on success, empty node and false on failure.
+// Returns found node or nil if not found.
 func (n *Node) GetNode(key string) *Node {
 	if n.Key == key {
 		return n
@@ -113,7 +113,7 @@ func (ns Nodes) GetAll(key string) Nodes {
 	return nodes
 }
 
-// Best returns a node with the longest value.
+// Best returns a node with the longest value or nil if the list is empty.
 func (ns Nodes) Best() *Node {
 	if len(ns) == 0 {
 		return nil
