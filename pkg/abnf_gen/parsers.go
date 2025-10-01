@@ -229,9 +229,8 @@ const (
 func parseRules(s []byte) (map[string]rule, error) {
 	n := abnf_def.Rulelist(s, nil).Best()
 	if n.Len() < len(s) {
-		return nil, fmt.Errorf("source isn't fully consumed, source length %d != best match length %d", n.Len(), len(s))
+		return nil, fmt.Errorf("source isn't fully consumed, best match length %d != source length %d", n.Len(), len(s))
 	}
-
 	return parseRuleslistNode(n), nil
 }
 
@@ -279,7 +278,7 @@ func parseRuleNode(n *abnf.Node) rule {
 	return rule{
 		name:   mustGetNode(n, "rulename").String(),
 		oprt:   parseAlternationNode(mustGetNode(n, "alternation")),
-		extend: n.Contains("=/"),
+		extend: n.Contains("\"=/\""),
 	}
 }
 
