@@ -55,7 +55,7 @@ func Range(key string, low, high []byte) Operator {
 			}
 		}
 		if l == 0 {
-			return nil
+			return ns
 		}
 
 		return append(ns, &Node{
