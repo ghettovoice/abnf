@@ -5,93 +5,74 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-
 	"github.com/ghettovoice/abnf/pkg/abnf_gen"
+	"github.com/google/go-cmp/cmp"
 )
 
-var _ = Describe("CodeGenerator", func() {
-	DescribeTable("",
-		func(abnfPath, expPath string, gen *abnf_gen.CodeGenerator) {
-			raw, err := os.ReadFile(abnfPath)
-			Expect(err).ShouldNot(HaveOccurred())
+func TestCodeGenerator_WriteTo(t *testing.T) {
+	src, err := os.ReadFile("../abnf_def/rules.abnf")
+	if err != nil {
+		t.Fatalf("read ABNF file failed: %v", err)
+	}
 
-			src := bytes.NewBuffer(raw)
-			Expect(gen.ReadFrom(src)).Error().ShouldNot(HaveOccurred())
-
-			var dst bytes.Buffer
-			Expect(gen.WriteTo(&dst)).Error().ShouldNot(HaveOccurred())
-
-			exp, err := os.ReadFile(expPath)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			Expect(dst.String()).Should(Equal(string(exp)))
-		},
-		Entry("rules.abnf",
-			"../abnf_core/rules.abnf",
-			"../abnf_core/rules.go",
-			&abnf_gen.CodeGenerator{
+	g := &abnf_gen.CodeGenerator{
+		PackageName: "abnf_def",
+		WrapErrors:  true,
+		External: map[string]abnf_gen.ExternalRule{
+			"CRLF": {
+				PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
 				PackageName: "abnf_core",
-				AsOperators: true,
 			},
-		),
-		Entry("rules.abnf",
-			"../abnf_def/rules.abnf",
-			"../abnf_def/rules.go",
-			&abnf_gen.CodeGenerator{
-				PackageName: "abnf_def",
-				AsOperators: true,
-				External: map[string]abnf_gen.ExternalRule{
-					"CRLF": {
-						PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
-						PackageName: "abnf_core",
-						IsOperator:  true,
-					},
-					"WSP": {
-						PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
-						PackageName: "abnf_core",
-						IsOperator:  true,
-					},
-					"BIT": {
-						PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
-						PackageName: "abnf_core",
-						IsOperator:  true,
-					},
-					"VCHAR": {
-						PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
-						PackageName: "abnf_core",
-						IsOperator:  true,
-					},
-					"DIGIT": {
-						PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
-						PackageName: "abnf_core",
-						IsOperator:  true,
-					},
-					"HEXDIG": {
-						PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
-						PackageName: "abnf_core",
-						IsOperator:  true,
-					},
-					"DQUOTE": {
-						PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
-						PackageName: "abnf_core",
-						IsOperator:  true,
-					},
-					"ALPHA": {
-						PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
-						PackageName: "abnf_core",
-						IsOperator:  true,
-					},
-				},
+			"WSP": {
+				PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
+				PackageName: "abnf_core",
 			},
-		),
-	)
-})
+			"BIT": {
+				PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
+				PackageName: "abnf_core",
+			},
+			"VCHAR": {
+				PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
+				PackageName: "abnf_core",
+			},
+			"DIGIT": {
+				PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
+				PackageName: "abnf_core",
+			},
+			"HEXDIG": {
+				PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
+				PackageName: "abnf_core",
+			},
+			"DQUOTE": {
+				PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
+				PackageName: "abnf_core",
+			},
+			"ALPHA": {
+				PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
+				PackageName: "abnf_core",
+			},
+		},
+	}
+	if _, err := g.ReadFrom(bytes.NewReader(src)); err != nil {
+		t.Fatalf("g.ReadFrom(src) error = %v, want nil", err)
+	}
+
+	var dst bytes.Buffer
+	if _, err := g.WriteTo(&dst); err != nil {
+		t.Fatalf("g.WriteTo(&dst) error = %v, want nil", err)
+	}
+
+	want, err := os.ReadFile("../abnf_def/rules.go")
+	if err != nil {
+		t.Fatalf("read expected Go file failed: %v", err)
+	}
+
+	if got, want := dst.String(), string(want); got != want {
+		t.Fatalf("got != want\ndiff (-got +want)\n%v", cmp.Diff(got, want))
+	}
+}
 
 func TestCodeGenerator_ReservedWords(t *testing.T) {
-	RegisterTestingT(t)
-
 	src := []byte(
 		"var = type / struct\n" +
 			"type = \"0\" / \"1\"\n" +
@@ -99,7 +80,6 @@ func TestCodeGenerator_ReservedWords(t *testing.T) {
 	)
 	g := &abnf_gen.CodeGenerator{
 		PackageName: "reserved_words",
-		AsOperators: true,
 	}
 	if _, err := g.ReadFrom(bytes.NewReader(src)); err != nil {
 		t.Fatal(err)
@@ -114,56 +94,116 @@ func TestCodeGenerator_ReservedWords(t *testing.T) {
 
 package reserved_words
 
-import "github.com/ghettovoice/abnf"
+import (
+	"sync"
 
-var struct_ abnf.Operator
+	"github.com/ghettovoice/abnf"
+)
 
-// Struct rule: struct = %x41-5A / %x61-7A
-func Struct(s []byte, ns abnf.Nodes) abnf.Nodes {
-	if struct_ == nil {
-		struct_ = abnf.Alt(
+var (
+	oprsDescr  = &OperatorsDescr{}
+	rulesDescr = &RulesDescr{}
+)
+
+// Operators returns operators descriptor.
+func Operators() *OperatorsDescr {
+	return oprsDescr
+}
+
+// Rules returns rules descriptor.
+func Rules() *RulesDescr {
+	return rulesDescr
+}
+
+// OperatorsMap returns map of all operators.
+func OperatorsMap() map[string]abnf.Operator {
+	return map[string]abnf.Operator{
+		"struct": oprsDescr.Struct,
+		"type":   oprsDescr.Type,
+		"var":    oprsDescr.Var,
+	}
+}
+
+// RulesMap returns map of all rules.
+func RulesMap() map[string]abnf.Rule {
+	return map[string]abnf.Rule{
+		"struct": rulesDescr.Struct,
+		"type":   rulesDescr.Type,
+		"var":    rulesDescr.Var,
+	}
+}
+
+// OperatorsDescr defines operators descriptor that provides operators as methods.
+type OperatorsDescr struct {
+	_struct     abnf.Operator
+	_structOnce sync.Once
+	_type       abnf.Operator
+	_typeOnce   sync.Once
+	_var        abnf.Operator
+	_varOnce    sync.Once
+}
+
+// Struct operator: struct = %x41-5A / %x61-7A
+func (desc *OperatorsDescr) Struct(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes, error) {
+	desc._structOnce.Do(func() {
+		desc._struct = abnf.Alt(
 			"struct",
 			abnf.Range("%x41-5A", []byte{65}, []byte{90}),
 			abnf.Range("%x61-7A", []byte{97}, []byte{122}),
 		)
-	}
-	return struct_(s, ns)
+	})
+	return desc._struct(in, pos, ns)
 }
 
-var type_ abnf.Operator
-
-// Type rule: type = "0" / "1"
-func Type(s []byte, ns abnf.Nodes) abnf.Nodes {
-	if type_ == nil {
-		type_ = abnf.Alt(
+// Type operator: type = "0" / "1"
+func (desc *OperatorsDescr) Type(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes, error) {
+	desc._typeOnce.Do(func() {
+		desc._type = abnf.Alt(
 			"type",
 			abnf.Literal("\"0\"", []byte{48}),
 			abnf.Literal("\"1\"", []byte{49}),
 		)
-	}
-	return type_(s, ns)
+	})
+	return desc._type(in, pos, ns)
 }
 
-var var_ abnf.Operator
+// Var operator: var = type / struct
+func (desc *OperatorsDescr) Var(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes, error) {
+	desc._varOnce.Do(func() {
+		desc._var = abnf.Alt(
+			"var",
+			desc.Type,
+			desc.Struct,
+		)
+	})
+	return desc._var(in, pos, ns)
+}
+
+// RulesDescr defines rules descriptor that provides rules as methods.
+type RulesDescr struct{}
+
+// Struct rule: struct = %x41-5A / %x61-7A
+func (*RulesDescr) Struct(in []byte, ns abnf.Nodes) (abnf.Nodes, error) {
+	return oprsDescr.Struct(in, 0, ns)
+}
+
+// Type rule: type = "0" / "1"
+func (*RulesDescr) Type(in []byte, ns abnf.Nodes) (abnf.Nodes, error) {
+	return oprsDescr.Type(in, 0, ns)
+}
 
 // Var rule: var = type / struct
-func Var(s []byte, ns abnf.Nodes) abnf.Nodes {
-	if var_ == nil {
-		var_ = abnf.Alt(
-			"var",
-			Type,
-			Struct,
-		)
-	}
-	return var_(s, ns)
+func (*RulesDescr) Var(in []byte, ns abnf.Nodes) (abnf.Nodes, error) {
+	return oprsDescr.Var(in, 0, ns)
 }
 `
-	Expect(dst.String()).Should(Equal(want))
+
+	if got := dst.String(); got != want {
+		t.Fatalf("got != want\ndiff (-got +want)\n%v", cmp.Diff(got, want))
+	}
 }
 
 func TestCodeGenerator_ExtendRule(t *testing.T) {
-	RegisterTestingT(t)
-
 	rules := bytes.NewBuffer([]byte(
 		"r1 = r2 / \"2\"\n" +
 			"r2 = BIT / ALPHA\n" +
@@ -171,7 +211,6 @@ func TestCodeGenerator_ExtendRule(t *testing.T) {
 	))
 	g := &abnf_gen.CodeGenerator{
 		PackageName: "extend_rule",
-		AsOperators: true,
 	}
 	if _, err := g.ReadFrom(rules); err != nil {
 		t.Fatal(err)
@@ -189,37 +228,92 @@ func TestCodeGenerator_ExtendRule(t *testing.T) {
 
 package extend_rule
 
-import "github.com/ghettovoice/abnf"
+import (
+	"sync"
 
-var r1 abnf.Operator
+	"github.com/ghettovoice/abnf"
+)
 
-// R1 rule: r1 = r2 / "2" / "3" / "4"
-func R1(s []byte, ns abnf.Nodes) abnf.Nodes {
-	if r1 == nil {
-		r1 = abnf.Alt(
+var (
+	oprsDescr  = &OperatorsDescr{}
+	rulesDescr = &RulesDescr{}
+)
+
+// Operators returns operators descriptor.
+func Operators() *OperatorsDescr {
+	return oprsDescr
+}
+
+// Rules returns rules descriptor.
+func Rules() *RulesDescr {
+	return rulesDescr
+}
+
+// OperatorsMap returns map of all operators.
+func OperatorsMap() map[string]abnf.Operator {
+	return map[string]abnf.Operator{
+		"r1": oprsDescr.R1,
+		"r2": oprsDescr.R2,
+	}
+}
+
+// RulesMap returns map of all rules.
+func RulesMap() map[string]abnf.Rule {
+	return map[string]abnf.Rule{
+		"r1": rulesDescr.R1,
+		"r2": rulesDescr.R2,
+	}
+}
+
+// OperatorsDescr defines operators descriptor that provides operators as methods.
+type OperatorsDescr struct {
+	r1     abnf.Operator
+	r1Once sync.Once
+	r2     abnf.Operator
+	r2Once sync.Once
+}
+
+// R1 operator: r1 = r2 / "2" / "3" / "4"
+func (desc *OperatorsDescr) R1(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes, error) {
+	desc.r1Once.Do(func() {
+		desc.r1 = abnf.Alt(
 			"r1",
-			R2,
+			desc.R2,
 			abnf.Literal("\"2\"", []byte{50}),
 			abnf.Literal("\"3\"", []byte{51}),
 			abnf.Literal("\"4\"", []byte{52}),
 		)
-	}
-	return r1(s, ns)
+	})
+	return desc.r1(in, pos, ns)
 }
 
-var r2 abnf.Operator
+// R2 operator: r2 = BIT / ALPHA
+func (desc *OperatorsDescr) R2(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes, error) {
+	desc.r2Once.Do(func() {
+		desc.r2 = abnf.Alt(
+			"r2",
+			desc.BIT,
+			desc.ALPHA,
+		)
+	})
+	return desc.r2(in, pos, ns)
+}
+
+// RulesDescr defines rules descriptor that provides rules as methods.
+type RulesDescr struct{}
+
+// R1 rule: r1 = r2 / "2" / "3" / "4"
+func (*RulesDescr) R1(in []byte, ns abnf.Nodes) (abnf.Nodes, error) {
+	return oprsDescr.R1(in, 0, ns)
+}
 
 // R2 rule: r2 = BIT / ALPHA
-func R2(s []byte, ns abnf.Nodes) abnf.Nodes {
-	if r2 == nil {
-		r2 = abnf.Alt(
-			"r2",
-			BIT,
-			ALPHA,
-		)
-	}
-	return r2(s, ns)
+func (*RulesDescr) R2(in []byte, ns abnf.Nodes) (abnf.Nodes, error) {
+	return oprsDescr.R2(in, 0, ns)
 }
 `
-	Expect(dst.String()).Should(Equal(want))
+
+	if got := dst.String(); got != want {
+		t.Fatalf("got != want\ndiff (-got +want)\n%v", cmp.Diff(got, want))
+	}
 }

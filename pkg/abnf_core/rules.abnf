@@ -12,7 +12,6 @@ DIGIT  = %x30-39 ; 0-9
 DQUOTE = %x22
        ; " (Double Quote)
 HEXDIG = DIGIT / "A" / "B" / "C" / "D" / "E" / "F"
-               / "a" / "b" / "c" / "d" / "e" / "f"
 HTAB   = %x09
        ; horizontal tab
 LF     = %x0A

@@ -8,3 +8,5 @@ package abnf
 const (
 	VERSION = "0.3.2" // package version
 )
+
+type Rule = func(in []byte, ns Nodes) (Nodes, error)

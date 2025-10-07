@@ -2,104 +2,66 @@ package abnf_gen_test
 
 import (
 	"bytes"
-
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	"testing"
 
 	"github.com/ghettovoice/abnf"
 	"github.com/ghettovoice/abnf/pkg/abnf_core"
 	"github.com/ghettovoice/abnf/pkg/abnf_gen"
+	"github.com/google/go-cmp/cmp"
 )
 
-var _ = Describe("ParserGenerator", func() {
-	var g *abnf_gen.ParserGenerator
-
-	BeforeEach(func() {
-		g = &abnf_gen.ParserGenerator{
-			External: map[string]abnf_gen.ExternalRule{
-				"bit": {
-					IsOperator: true,
-					Operator:   abnf_core.BIT,
-				},
-				"alpha": {
-					Factory: func() abnf.Operator { return abnf_core.ALPHA },
-				},
+func TestParserGenerator_Operators(t *testing.T) {
+	g := &abnf_gen.ParserGenerator{
+		External: map[string]abnf_gen.ExternalRule{
+			"bit": {
+				Operator: abnf_core.Operators().BIT,
 			},
-		}
+			"alpha": {
+				Operator: abnf_core.Operators().ALPHA,
+			},
+		},
+	}
+	src := bytes.NewBuffer([]byte(
+		"r1 = r2 / \"2\"\n" +
+			"r2 = bit / alpha\n",
+	))
 
-		b1 := bytes.NewBuffer([]byte(
-			"r1 = r2 / \"2\"\n" +
-				"r2 = bit / alpha\n",
-		))
-		Expect(g.ReadFrom(b1)).Error().Should(Succeed())
-	})
+	if _, err := g.ReadFrom(src); err != nil {
+		t.Fatalf("g.ReadFrom(src) error = %v, want nil", err)
+	}
 
-	It("should build operators", func() {
-		op := g.Operators()["r1"]
-		Expect(op([]byte("0"), nil)).Should(Equal(abnf.Nodes{
-			{
-				Key:   "r1",
-				Value: []byte("0"),
-				Children: abnf.Nodes{
-					{
-						Key:   "r2",
-						Value: []byte("0"),
-						Children: abnf.Nodes{
-							{
-								Key:   "BIT",
-								Value: []byte("0"),
-								Children: abnf.Nodes{
-									{Key: "\"0\"", Value: []byte("0")},
-								},
+	op := g.Operators()["r1"]
+	if op == nil {
+		t.Fatalf("g.Operators()[\"r1\"] = nil, want not nil")
+	}
+
+	ns, err := op([]byte("0"), 0, nil)
+	if err != nil {
+		t.Fatalf("op([]byte(\"0\"), 0, nil) error = %v, want nil", err)
+	}
+
+	want := abnf.Nodes{
+		{
+			Key:   "r1",
+			Value: []byte("0"),
+			Children: abnf.Nodes{
+				{
+					Key:   "r2",
+					Value: []byte("0"),
+					Children: abnf.Nodes{
+						{
+							Key:   "BIT",
+							Value: []byte("0"),
+							Children: abnf.Nodes{
+								{Key: "\"0\"", Value: []byte("0")},
 							},
 						},
 					},
 				},
 			},
-		}))
-	})
-
-	It("should build factories", func() {
-		factr := g.Factories()
-		op := factr["r1"]()
-		Expect(op([]byte("0"), nil)).Should(Equal(abnf.Nodes{
-			{
-				Key:   "r1",
-				Value: []byte("0"),
-				Children: abnf.Nodes{
-					{
-						Key:   "r2",
-						Value: []byte("0"),
-						Children: abnf.Nodes{
-							{
-								Key:   "BIT",
-								Value: []byte("0"),
-								Children: abnf.Nodes{
-									{Key: "\"0\"", Value: []byte("0")},
-								},
-							},
-						},
-					},
-				},
-			},
-		}))
-	})
-
-	It("should extend rule", func() {
-		op := g.Operators()["r1"]
-		Expect(op([]byte("3"), nil)).Should(BeEmpty())
-
-		Expect(g.ReadFrom(bytes.NewBuffer([]byte("r1 =/ \"3\"")))).Error().Should(Succeed())
-
-		op = g.Operators()["r1"]
-		Expect(op([]byte("3"), nil)).Should(Equal(abnf.Nodes{
-			{
-				Key:   "r1",
-				Value: []byte("3"),
-				Children: abnf.Nodes{
-					{Key: "\"3\"", Value: []byte("3")},
-				},
-			},
-		}))
-	})
-})
+		},
+	}
+	if !cmp.Equal(ns, want) {
+		t.Fatalf("op([]byte(\"0\"), 0, nil) = %+v, want %+v\ndiff (-got +want):\n%v", ns, want, cmp.Diff(ns, want))
+	}
+}

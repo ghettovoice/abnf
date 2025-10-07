@@ -5,11 +5,9 @@ inputs:
 package: abnf_def
 # output file path
 output: rules.go
-# on/off operators generation
-as_operators: true
+wrap_errs: true
 # external ABNF rules
 external:
     - path: github.com/ghettovoice/abnf/pkg/abnf_core
       name: abnf_core
-      is_operators: true
       rules: [ALPHA, BIT, CHAR, CR, CRLF, CTL, DIGIT, DQUOTE, HEXDIG, HTAB, LF, LWSP, OCTET, SP, VCHAR, WSP]

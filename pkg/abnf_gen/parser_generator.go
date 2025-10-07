@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"braces.dev/errtrace"
 	"github.com/ghettovoice/abnf"
 )
 
@@ -14,55 +15,42 @@ type ParserGenerator struct {
 	rulesParser
 
 	oprts    map[string]abnf.Operator
-	factrs   map[string]OperatorFactory
+	rules    map[string]abnf.Rule
 	ruleName string
 }
 
 // ReadFrom reads and parses ABNF grammar from src.
 func (g *ParserGenerator) ReadFrom(src io.Reader) (int64, error) {
-	if len(g.factrs) > 0 {
-		for n := range g.factrs {
-			delete(g.factrs, n)
-		}
-	}
-	if len(g.oprts) > 0 {
-		for n := range g.oprts {
-			delete(g.oprts, n)
-		}
-	}
-	return g.rulesParser.ReadFrom(src)
-}
-
-// Factories returns a map of ABNF rules as operator factories.
-func (g *ParserGenerator) Factories() map[string]OperatorFactory {
-	if len(g.factrs) == 0 {
-		if g.factrs == nil {
-			g.factrs = make(map[string]OperatorFactory, len(g.rules))
-		}
-		for n, r := range g.rules {
-			g.factrs[n] = r.buildFactr(g)
-		}
-	}
-	return g.factrs
+	clear(g.oprts)
+	return errtrace.Wrap2(g.rulesParser.ReadFrom(src))
 }
 
 // Operators returns a map of ABNF rules as operator functions.
 func (g *ParserGenerator) Operators() map[string]abnf.Operator {
 	if len(g.oprts) == 0 {
 		if g.oprts == nil {
-			g.oprts = make(map[string]abnf.Operator, len(g.rules))
+			g.oprts = make(map[string]abnf.Operator, len(g.rulesParser.rules))
 		}
-		if len(g.factrs) > 0 {
-			for n, f := range g.factrs {
-				g.oprts[n] = f()
-			}
-		} else {
-			for n, r := range g.rules {
-				g.oprts[n] = r.buildOprt(g)
-			}
+		for n, r := range g.rulesParser.rules {
+			g.oprts[n] = r.buildOprt(g)
 		}
 	}
 	return g.oprts
+}
+
+func (g *ParserGenerator) Rules() map[string]abnf.Rule {
+	if len(g.rules) == 0 {
+		oprts := g.Operators()
+		if g.rules == nil {
+			g.rules = make(map[string]abnf.Rule, len(oprts))
+		}
+		for n, op := range oprts {
+			g.rules[n] = func(in []byte, ns abnf.Nodes) (abnf.Nodes, error) {
+				return op(in, 0, ns)
+			}
+		}
+	}
+	return g.rules
 }
 
 func (g *ParserGenerator) oprtKey(key string) string {
@@ -75,7 +63,6 @@ func (g *ParserGenerator) oprtKey(key string) string {
 
 type operatorBuilder interface {
 	buildOprt(g *ParserGenerator) abnf.Operator
-	buildFactr(g *ParserGenerator) OperatorFactory
 }
 
 func (r rule) buildOprt(g *ParserGenerator) abnf.Operator {
@@ -84,31 +71,13 @@ func (r rule) buildOprt(g *ParserGenerator) abnf.Operator {
 	return r.oprt.buildOprt(g)
 }
 
-func (r rule) buildFactr(g *ParserGenerator) OperatorFactory {
-	factr := r.oprt.buildFactr(g)
-	return func() abnf.Operator {
-		if _, ok := g.oprts[r.name]; !ok {
-			if g.oprts == nil {
-				g.oprts = make(map[string]abnf.Operator)
-			}
-			g.ruleName = r.name
-			g.oprts[r.name] = factr()
-		}
-		return g.oprts[r.name]
-	}
-}
-
 func (op altOperator) buildOprt(g *ParserGenerator) abnf.Operator {
 	key := g.oprtKey(op.key())
 	oprts := make([]abnf.Operator, 0, len(op.oprts))
 	for _, op := range op.oprts {
 		oprts = append(oprts, op.buildOprt(g))
 	}
-	return abnf.Alt(key, oprts...)
-}
-
-func (op altOperator) buildFactr(g *ParserGenerator) OperatorFactory {
-	return func() abnf.Operator { return op.buildOprt(g) }
+	return abnf.Alt(key, oprts[0], oprts[1:]...)
 }
 
 func (op concatOperator) buildOprt(g *ParserGenerator) abnf.Operator {
@@ -117,11 +86,7 @@ func (op concatOperator) buildOprt(g *ParserGenerator) abnf.Operator {
 	for _, op := range op.oprts {
 		oprts = append(oprts, op.buildOprt(g))
 	}
-	return abnf.Concat(key, oprts...)
-}
-
-func (op concatOperator) buildFactr(g *ParserGenerator) OperatorFactory {
-	return func() abnf.Operator { return op.buildOprt(g) }
+	return abnf.Concat(key, oprts[0], oprts[1:]...)
 }
 
 func (op repeatOperator) buildOprt(g *ParserGenerator) abnf.Operator {
@@ -143,53 +108,28 @@ func (op repeatOperator) buildOprt(g *ParserGenerator) abnf.Operator {
 	return abnf.Repeat(key, op.min, op.max, op.oprt.buildOprt(g))
 }
 
-func (op repeatOperator) buildFactr(g *ParserGenerator) OperatorFactory {
-	return func() abnf.Operator { return op.buildOprt(g) }
-}
-
 func (op ruleNameOperator) buildOprt(g *ParserGenerator) abnf.Operator {
 	if extRule, ok := g.External[op.key()]; ok {
-		if extRule.IsOperator {
-			if extRule.Operator == nil {
-				panic(fmt.Errorf("invalid external ABNF rule '%s' found: 'Operator' field is empty", op.key()))
-			}
-			return extRule.Operator
+		if extRule.Operator == nil {
+			panic(fmt.Errorf("invalid external ABNF rule '%s' found: 'Operator' field is empty", op.key()))
 		}
-
-		if extRule.Factory == nil {
-			panic(fmt.Errorf("invalid external ABNF rule '%s' found: 'Factory' field is empty", op.key()))
-		}
-		return extRule.Factory()
+		return extRule.Operator
 	}
 
-	return func(s []byte, ns abnf.Nodes) abnf.Nodes {
+	return func(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes, error) {
 		var (
 			oprt abnf.Operator
 			ok   bool
 		)
 		if oprt, ok = g.oprts[op.key()]; !ok {
-			var factr OperatorFactory
-			if factr, ok = g.factrs[op.key()]; ok {
-				oprt = factr()
-			}
-		}
-		if !ok {
 			panic(fmt.Errorf("unknown ABNF rule '%s'", op.key()))
 		}
-		return oprt(s, ns)
+		return oprt(in, pos, ns)
 	}
-}
-
-func (op ruleNameOperator) buildFactr(g *ParserGenerator) OperatorFactory {
-	return func() abnf.Operator { return op.buildOprt(g) }
 }
 
 func (op optionOperator) buildOprt(g *ParserGenerator) abnf.Operator {
 	return abnf.Optional(g.oprtKey(op.key()), op.oprt.buildOprt(g))
-}
-
-func (op optionOperator) buildFactr(g *ParserGenerator) OperatorFactory {
-	return func() abnf.Operator { return op.buildOprt(g) }
 }
 
 func (op charValOperator) buildOprt(g *ParserGenerator) abnf.Operator {
@@ -200,10 +140,6 @@ func (op charValOperator) buildOprt(g *ParserGenerator) abnf.Operator {
 		oprtFunc = abnf.Literal
 	}
 	return oprtFunc(g.oprtKey(op.key()), []byte(op.val))
-}
-
-func (op charValOperator) buildFactr(g *ParserGenerator) OperatorFactory {
-	return func() abnf.Operator { return op.buildOprt(g) }
 }
 
 func (op numValOperator) buildOprt(g *ParserGenerator) abnf.Operator {
@@ -218,8 +154,4 @@ func (op numValOperator) buildOprt(g *ParserGenerator) abnf.Operator {
 		buf = append(buf, v...)
 	}
 	return abnf.Literal(g.oprtKey(op.key()), buf)
-}
-
-func (op numValOperator) buildFactr(g *ParserGenerator) OperatorFactory {
-	return func() abnf.Operator { return op.buildOprt(g) }
 }
