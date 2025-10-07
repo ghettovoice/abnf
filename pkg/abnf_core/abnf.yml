@@ -5,5 +5,4 @@ inputs:
 package: abnf_core
 # output file path
 output: rules.go
-# on/off operators generation
-as_operators: true
+wrap_errs: true

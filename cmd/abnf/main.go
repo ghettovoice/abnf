@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/mail"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"braces.dev/errtrace"
 	"github.com/urfave/cli/v3"
 
 	"github.com/ghettovoice/abnf"
@@ -83,7 +85,7 @@ const defaultConfPath = "abnf.yml"
 func configAction(_ context.Context, cmd *cli.Command) error {
 	wd, err := os.Getwd()
 	if err != nil {
-		return cli.Exit(fmt.Errorf("get working directory: %w", err), 1)
+		return cli.Exit(errtrace.Wrap(fmt.Errorf("get working directory: %w", err)), 1)
 	}
 
 	confPath := defaultConfPath
@@ -99,19 +101,19 @@ func configAction(_ context.Context, cmd *cli.Command) error {
 			v := "no"
 			fmt.Printf("File %s is already exist. Overwrite? (y, N)\n", confPath)
 			if _, err := fmt.Scanln(&v); err != nil {
-				return cli.Exit(fmt.Errorf("read user input: %w", err), 1)
+				return cli.Exit(errtrace.Wrap(fmt.Errorf("read user input: %w", err)), 1)
 			}
 
 			switch strings.ToLower(v) {
 			case "0", "n", "no":
-				return cli.Exit(fmt.Errorf("config generation canceled"), 1)
+				return cli.Exit(errtrace.Wrap(fmt.Errorf("config generation canceled")), 1)
 			}
 		}
 	}
 
 	fd, err := os.OpenFile(confPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return cli.Exit(fmt.Errorf("open output file: %w", err), 1)
+		return cli.Exit(errtrace.Wrap(fmt.Errorf("open output file: %w", err)), 1)
 	}
 	defer fd.Close()
 
@@ -123,18 +125,15 @@ inputs:
 package: rules
 # output file path
 output: rules.g.go
-# on/off operators generation
-as_operators: false
 # external ABNF rules
 external:
     - path: github.com/ghettovoice/abnf/pkg/abnf_core
       name: abnf_core
-      is_operators: true
       rules: [ALPHA, BIT, CHAR, CR, CRLF, CTL, DIGIT, DQUOTE, HEXDIG, HTAB, LF, LWSP, OCTET, SP, VCHAR, WSP]
 `,
 	))
 	if err != nil {
-		return cli.Exit(fmt.Errorf("write config file: %w", err), 1)
+		return cli.Exit(errtrace.Wrap(fmt.Errorf("write config file: %w", err)), 1)
 	}
 
 	fmt.Printf("config written to file %s\n", confPath)
@@ -145,7 +144,7 @@ external:
 func generateAction(_ context.Context, cmd *cli.Command) error {
 	wd, err := os.Getwd()
 	if err != nil {
-		return cli.Exit(fmt.Errorf("get working directory: %w", err), 1)
+		return cli.Exit(errtrace.Wrap(fmt.Errorf("get working directory: %w", err)), 1)
 	}
 
 	// read config
@@ -157,12 +156,12 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 
 	buf, err := os.ReadFile(confPath)
 	if err != nil {
-		return cli.Exit(fmt.Errorf("read config file: %w", err), 1)
+		return cli.Exit(errtrace.Wrap(fmt.Errorf("read config file: %w", err)), 1)
 	}
 
 	cfg, err := parseConfig(buf)
 	if err != nil {
-		return cli.Exit(err, 1)
+		return cli.Exit(errtrace.Wrap(err), 1)
 	}
 
 	fmt.Printf("config file %s loaded\n", confPath)
@@ -171,7 +170,7 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 	var errs []error
 	g := abnf_gen.CodeGenerator{
 		PackageName: cfg.Package,
-		AsOperators: cfg.AsOperators,
+		WrapErrors:  cfg.WrapErrs,
 	}
 	if len(cfg.External) > 0 {
 		g.External = make(map[string]abnf_gen.ExternalRule)
@@ -183,7 +182,6 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 
 			for _, rule := range entry.Rules {
 				g.External[rule] = abnf_gen.ExternalRule{
-					IsOperator:  entry.IsOperators,
 					PackagePath: entry.Path,
 					PackageName: entry.Name,
 				}
@@ -195,7 +193,7 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 		}
 	}
 	if len(errs) > 0 {
-		return cli.Exit(multiError(errs), 1)
+		return cli.Exit(errtrace.Wrap(errors.Join(errs...)), 1)
 	}
 
 	// read, parse input ABNF files
@@ -219,7 +217,7 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 		fmt.Printf("ABNF file %s parsed\n", in)
 	}
 	if len(errs) > 0 {
-		return cli.Exit(multiError(errs), 1)
+		return cli.Exit(errtrace.Wrap(errors.Join(errs...)), 1)
 	}
 
 	// write Go sources to output file
@@ -234,24 +232,24 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 			v := "no"
 			fmt.Printf("File %s is already exist. Overwrite? (y, N)\n", outPath)
 			if _, err := fmt.Scanln(&v); err != nil {
-				return cli.Exit(fmt.Errorf("read user input: %w", err), 1)
+				return cli.Exit(errtrace.Wrap(fmt.Errorf("read user input: %w", err)), 1)
 			}
 
 			switch strings.ToLower(v) {
 			case "0", "n", "no":
-				return cli.Exit(fmt.Errorf("code generation canceled"), 1)
+				return cli.Exit(errtrace.Wrap(fmt.Errorf("code generation canceled")), 1)
 			}
 		}
 	}
 
 	fd, err := os.OpenFile(outPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return cli.Exit(fmt.Errorf("open output file: %w", err), 1)
+		return cli.Exit(errtrace.Wrap(fmt.Errorf("open output file: %w", err)), 1)
 	}
 	defer fd.Close()
 
 	if _, err := g.WriteTo(fd); err != nil {
-		return cli.Exit(fmt.Errorf("write generated code to file %s: %w", outPath, err), 1)
+		return cli.Exit(errtrace.Wrap(fmt.Errorf("write generated code to file %s: %w", outPath, err)), 1)
 	}
 
 	fmt.Printf("generated code written to file %s\n", outPath)

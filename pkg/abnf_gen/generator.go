@@ -7,17 +7,10 @@ import (
 
 // ExternalRule defines an external ABNF rule.
 //
-// [ParserGenerator] uses Operator and Factory fields.
+// [ParserGenerator] uses Operator field.
 // [CodeGenerator] uses PackagePath and PackageName fields.
-// IsOperator field is used by both generators.
 type ExternalRule struct {
-	IsOperator bool
-
-	Operator abnf.Operator
-	Factory  OperatorFactory
-
+	Operator    abnf.Operator
 	PackagePath string
 	PackageName string
 }
-
-type OperatorFactory func() abnf.Operator

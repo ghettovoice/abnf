@@ -28,11 +28,10 @@ Then update config options:
 - `inputs`: list of ABNF files to parse relative to the config file location
 - `package`: name of the generated package
 - `output`: path to the generated Go file relative to the config file location
-- `as_operators`: whether to generate operators instead of factories
+- `wrap_errs`: whether to wrap errors in rules/operators with `braces.dev/errtrace`
 - `external`: list of external ABNF rules used in inputs. Each external rule has the following fields:
   - `path`: Go package import path
   - `name`: Go package name
-  - `is_operators`: whether the package contains operators or factories
   - `rules`: list of ABNF rule names, i.e. function names
 
 Now with the config file ready, we can generate the code:
@@ -41,4 +40,5 @@ Now with the config file ready, we can generate the code:
 abnf generate ./config.yaml
 ```
 
-As example of config file and generated code, check [abnf_core](https://github.com/ghettovoice/abnf/tree/master/pkg/abnf_core) and [abnf_def](https://github.com/ghettovoice/abnf/tree/master/pkg/abnf_def) directories.
+As example of config file and generated code, check [abnf_core](https://github.com/ghettovoice/abnf/tree/master/pkg/abnf_core)
+and [abnf_def](https://github.com/ghettovoice/abnf/tree/master/pkg/abnf_def) directories.
