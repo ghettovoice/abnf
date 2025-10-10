@@ -6,7 +6,7 @@
 package abnf
 
 // VERSION is the package version
-const VERSION = "0.3.2"
+const VERSION = "v0.4.0"
 
 // Rule is a function that implements an ABNF rule.
 // Rule always parses input starting from the position 0.
