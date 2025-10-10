@@ -6,13 +6,13 @@
 [![Coverage Status](https://coveralls.io/repos/github/ghettovoice/abnf/badge.svg?branch=master)](https://coveralls.io/github/ghettovoice/abnf?branch=master)
 [![CodeQL](https://github.com/ghettovoice/abnf/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/ghettovoice/abnf/actions/workflows/github-code-scanning/codeql)
 
-Package `abnf` implements ABNF grammar as described in [RFC 5234](https://www.rfc-editor.org/rfc/rfc5234) 
+Package `abnf` implements ABNF grammar as described in [RFC 5234](https://www.rfc-editor.org/rfc/rfc5234)
 and [RFC 7405](https://www.rfc-editor.org/rfc/rfc7405).
 
 Inspired by:
 
-- https://github.com/declaresub/abnf
-- https://github.com/elimity-com/abnf
+- <https://github.com/declaresub/abnf>
+- <https://github.com/elimity-com/abnf>
 
 ## Installation
 
@@ -24,7 +24,7 @@ go get github.com/ghettovoice/abnf@latest
 
 ## Usage
 
-Build a rule from basic operators:
+Build a custom operator from basic operators:
 
 ```go
 package main
@@ -45,9 +45,9 @@ var abc = abnf.Concat(
 func main() {
     var ns abnf.Nodes
 
-    fmt.Println(abc([]byte("ab"), ns[:0]))
-    fmt.Println(abc([]byte("abcd"), ns[:0]))
-    fmt.Println(abc([]byte("abcdcd"), ns[:0]))
+    fmt.Println(abc([]byte("ab"), 0, ns[:0]))
+    fmt.Println(abc([]byte("abcd"), 0, ns[:0]))
+    fmt.Println(abc([]byte("abcdcd"), 0, ns[:0]))
 }
 ```
 

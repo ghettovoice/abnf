@@ -9,4 +9,6 @@ const (
 	VERSION = "0.3.2" // package version
 )
 
+// Rule is a function that implements an ABNF rule.
+// Rule always parses input starting from the position 0.
 type Rule = func(in []byte, ns Nodes) (Nodes, error)
