@@ -46,8 +46,8 @@ jobs:
 
             - uses: actions/upload-artifact@v4
               with:
-                  name: coverage_profile
-                  path: ./cover.profile
+                  name: coverage_output
+                  path: ./cover.out
 
     report:
         name: Report
@@ -68,9 +68,9 @@ jobs:
 
             - uses: actions/download-artifact@v4
               with:
-                  name: coverage_profile
+                  name: coverage_output
 
             - name: Send coverage
               env:
                   COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: goveralls -coverprofile=./cover.profile -service=github
+              run: goveralls -coverprofile=./cover.out -service=github
