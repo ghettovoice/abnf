@@ -1,3 +1,5 @@
+# Releasing a new version
+
 1. Update `VERSION` in `abnf.go`.
 2. Commit, push, and release:
 

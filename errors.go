@@ -6,6 +6,7 @@ import (
 )
 
 const (
+	// ErrNotMatched returned by operators if input doesn't match
 	ErrNotMatched sentinelError = "not matched"
 )
 

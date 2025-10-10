@@ -32,16 +32,19 @@ func literal(key string, want []byte, ci bool) Operator {
 }
 
 // Literal defines a case-insensitive characters sequence.
+// It returns ErrNotMatched if input doesn't match.
 func Literal(key string, val []byte) Operator {
 	return literal(key, val, true)
 }
 
 // LiteralCS defines a case-sensitive characters sequence.
+// It returns ErrNotMatched if input doesn't match.
 func LiteralCS(key string, val []byte) Operator {
 	return literal(key, val, false)
 }
 
 // Range defines a range of alternative numeric values.
+// It returns ErrNotMatched if input doesn't match.
 func Range(key string, low, high []byte) Operator {
 	return func(in []byte, pos uint, ns Nodes) (Nodes, error) {
 		if len(in[pos:]) < len(low) || bytes.Compare(in[pos:int(pos)+len(low)], low) < 0 {
@@ -113,12 +116,14 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 
 // Alt defines a sequence of alternative elements that are separated by a forward slash ("/").
 // Created operator will return all matched alternatives.
+// It returns joined errors if all alternatives failed.
 func Alt(key string, op Operator, ops ...Operator) Operator {
 	return alt(key, false, op, ops...)
 }
 
 // AltFirst defines a sequence of alternative elements that are separated by a forward slash ("/").
 // Created operator will return first matched alternative.
+// It returns joined errors if all alternatives failed.
 func AltFirst(key string, op Operator, ops ...Operator) Operator {
 	return alt(key, true, op, ops...)
 }
@@ -190,17 +195,20 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 
 // Concat defines a simple, ordered string of values.
 // Created operator will return the longest alternative.
+// It returns error if one of the operators failed.
 func Concat(key string, op Operator, ops ...Operator) Operator {
 	return concat(key, false, op, ops...)
 }
 
 // ConcatAll defines a simple, ordered string of values.
 // Created operator will return all alternatives.
+// It returns error if one of the operators failed.
 func ConcatAll(key string, op Operator, ops ...Operator) Operator {
 	return concat(key, true, op, ops...)
 }
 
 // Repeat defines a variable repetition.
+// It returns error in case when operator wasn't matched min times.
 func Repeat(key string, min, max uint, op Operator) Operator {
 	var minOp Operator
 	if min > 0 {
@@ -286,6 +294,7 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 }
 
 // RepeatN defines a specific repetition.
+// It returns error in case when operator wasn't matched n times.
 func RepeatN(key string, n uint, op Operator) Operator {
 	return Repeat(key, n, n, op)
 }
@@ -296,6 +305,7 @@ func Repeat0Inf(key string, op Operator) Operator {
 }
 
 // Repeat1Inf defines a specific repetition from 1 to infinity.
+// It returns error in case when operator wasn't matched at least once.
 func Repeat1Inf(key string, op Operator) Operator {
 	return Repeat(key, 1, 0, op)
 }
