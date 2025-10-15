@@ -14,13 +14,13 @@ type Operator = func(in []byte, pos uint, ns Nodes) (Nodes, error)
 func literal(key string, want []byte, ci bool) Operator {
 	return func(in []byte, pos uint, ns Nodes) (Nodes, error) {
 		if len(in[pos:]) < len(want) {
-			return ns, errtrace.Wrap(newOpError(key, pos, ErrNotMatched))
+			return ns, errtrace.Wrap(&operError{key, pos, ErrNotMatched})
 		}
 
 		got := in[pos : int(pos)+len(want)]
 		if !bytes.Equal(got, want) {
 			if !ci || !bytes.Equal(toLower(want), toLower(got)) {
-				return ns, errtrace.Wrap(newOpError(key, pos, ErrNotMatched))
+				return ns, errtrace.Wrap(&operError{key, pos, ErrNotMatched})
 			}
 		}
 		return append(ns, &Node{
@@ -48,7 +48,7 @@ func LiteralCS(key string, val []byte) Operator {
 func Range(key string, low, high []byte) Operator {
 	return func(in []byte, pos uint, ns Nodes) (Nodes, error) {
 		if len(in[pos:]) < len(low) || bytes.Compare(in[pos:int(pos)+len(low)], low) < 0 {
-			return ns, errtrace.Wrap(newOpError(key, pos, ErrNotMatched))
+			return ns, errtrace.Wrap(&operError{key, pos, ErrNotMatched})
 		}
 
 		var l int
@@ -61,7 +61,7 @@ func Range(key string, low, high []byte) Operator {
 			}
 		}
 		if l == 0 {
-			return ns, errtrace.Wrap(newOpError(key, pos, ErrNotMatched))
+			return ns, errtrace.Wrap(&operError{key, pos, ErrNotMatched})
 		}
 		return append(ns, &Node{
 			Key:   key,
@@ -108,7 +108,7 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 		curns.free()
 
 		if len(errs) > 0 {
-			return ns, errtrace.Wrap(newOpError(key, pos, joinErrs(errs...)))
+			return ns, errtrace.Wrap(&operError{key, pos, multiError(errs)})
 		}
 		return ns, nil
 	}
@@ -187,7 +187,7 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 		curns.free()
 
 		if len(errs) > 0 {
-			return ns, errtrace.Wrap(newOpError(key, pos, joinErrs(errs...)))
+			return ns, errtrace.Wrap(&operError{key, pos, multiError(errs)})
 		}
 		return ns, nil
 	}
@@ -287,7 +287,7 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 		resns.free()
 
 		if len(errs) > 0 {
-			return ns, errtrace.Wrap(newOpError(key, pos, joinErrs(errs...)))
+			return ns, errtrace.Wrap(&operError{key, pos, multiError(errs)})
 		}
 		return ns, nil
 	}
