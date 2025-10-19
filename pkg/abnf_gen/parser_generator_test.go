@@ -35,8 +35,10 @@ func TestParserGenerator_Operators(t *testing.T) {
 		t.Fatalf("g.Operators()[\"r1\"] = nil, want not nil")
 	}
 
-	ns, err := op([]byte("0"), 0, nil)
-	if err != nil {
+	ns := abnf.NewNodes()
+	defer ns.Free()
+
+	if err := op([]byte("0"), 0, &ns); err != nil {
 		t.Fatalf("op([]byte(\"0\"), 0, nil) error = %v, want nil", err)
 	}
 

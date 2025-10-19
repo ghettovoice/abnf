@@ -9,25 +9,34 @@ import (
 )
 
 // Operator represents an ABNF operator.
-type Operator = func(in []byte, pos uint, ns Nodes) (Nodes, error)
+type Operator = func(in []byte, pos uint, ns *Nodes) error
 
 func literal(key string, want []byte, ci bool) Operator {
-	return func(in []byte, pos uint, ns Nodes) (Nodes, error) {
+	return func(in []byte, pos uint, ns *Nodes) error {
 		if len(in[pos:]) < len(want) {
-			return ns, errtrace.Wrap(&operError{key, pos, ErrNotMatched})
+			return errtrace.Wrap(&operError{key, pos, ErrNotMatched})
 		}
 
 		got := in[pos : int(pos)+len(want)]
 		if !bytes.Equal(got, want) {
 			if !ci || !bytes.Equal(toLower(want), toLower(got)) {
-				return ns, errtrace.Wrap(&operError{key, pos, ErrNotMatched})
+				return errtrace.Wrap(&operError{key, pos, ErrNotMatched})
 			}
 		}
-		return append(ns, &Node{
-			Key:   key,
-			Pos:   pos,
-			Value: got,
-		}), nil
+
+		ns.Append(
+			loadOrStoreNode(
+				nodeCacheKey{key, pos, uint(len(got)), in, nil},
+				func() *Node {
+					return &Node{
+						Key:   key,
+						Pos:   pos,
+						Value: got,
+					}
+				},
+			),
+		)
+		return nil
 	}
 }
 
@@ -46,9 +55,9 @@ func LiteralCS(key string, val []byte) Operator {
 // Range defines a range of alternative numeric values.
 // It returns ErrNotMatched if input doesn't match.
 func Range(key string, low, high []byte) Operator {
-	return func(in []byte, pos uint, ns Nodes) (Nodes, error) {
+	return func(in []byte, pos uint, ns *Nodes) error {
 		if len(in[pos:]) < len(low) || bytes.Compare(in[pos:int(pos)+len(low)], low) < 0 {
-			return ns, errtrace.Wrap(&operError{key, pos, ErrNotMatched})
+			return errtrace.Wrap(&operError{key, pos, ErrNotMatched})
 		}
 
 		var l int
@@ -60,57 +69,85 @@ func Range(key string, low, high []byte) Operator {
 				break
 			}
 		}
+
 		if l == 0 {
-			return ns, errtrace.Wrap(&operError{key, pos, ErrNotMatched})
+			return errtrace.Wrap(&operError{key, pos, ErrNotMatched})
 		}
-		return append(ns, &Node{
-			Key:   key,
-			Pos:   pos,
-			Value: in[pos : int(pos)+l],
-		}), nil
+
+		ns.Append(
+			loadOrStoreNode(
+				nodeCacheKey{key, pos, uint(l), in, nil},
+				func() *Node {
+					return &Node{
+						Key:   key,
+						Pos:   pos,
+						Value: in[pos : int(pos)+l],
+					}
+				},
+			),
+		)
+		return nil
 	}
 }
 
 func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
-	return func(in []byte, pos uint, ns Nodes) (Nodes, error) {
-		var errs []error
-		curns := newNodes()
-		subns := newNodes()
-		for _, op := range append([]Operator{op}, ops...) {
-			var err error
-			subns.clear()
-			if subns, err = op(in, pos, subns); err == nil {
+	return func(in []byte, pos uint, ns *Nodes) error {
+		resns := NewNodes()
+		defer resns.Free()
+		subns := NewNodes()
+		defer subns.Free()
+
+		errs := make([]error, 0, len(ops)+1)
+
+		runOp := func(op Operator) bool {
+			subns.Clear()
+			if err := op(in, pos, &subns); err == nil {
 				for _, sn := range subns {
-					curns = append(curns, &Node{
-						Key:      key,
-						Pos:      pos,
-						Value:    in[pos : int(pos)+len(sn.Value)],
-						Children: append(newNodes(), sn),
-					})
+					resns.Append(
+						loadOrStoreNode(
+							nodeCacheKey{key, pos, uint(len(sn.Value)), in, hashString([]byte(sn.Key))},
+							func() *Node {
+								nn := &Node{
+									Key:   key,
+									Pos:   pos,
+									Value: in[pos : int(pos)+len(sn.Value)],
+								}
+								nn.Children = append(NewNodes(), sn)
+								return nn
+							},
+						),
+					)
 				}
 			} else {
 				errs = append(errs, err)
 			}
 
 			if len(subns) > 0 && fm {
-				break
+				return false
+			}
+			return true
+		}
+
+		if runOp(op) {
+			for _, op := range ops {
+				if !runOp(op) {
+					break
+				}
 			}
 		}
-		subns.free()
 
-		if len(curns) > 0 {
-			if len(curns) > 1 {
-				sort.Sort(nodeSorter(curns))
+		if len(resns) > 0 {
+			if len(resns) > 1 {
+				sort.Sort(nodeSorter(resns))
 			}
-			ns = append(ns, curns...)
+			ns.Append(resns...)
 			errs = errs[:0]
 		}
-		curns.free()
 
 		if len(errs) > 0 {
-			return ns, errtrace.Wrap(&operError{key, pos, multiError(errs)})
+			return errtrace.Wrap(&operError{key, pos, multiError(errs)})
 		}
-		return ns, nil
+		return nil
 	}
 }
 
@@ -129,33 +166,56 @@ func AltFirst(key string, op Operator, ops ...Operator) Operator {
 }
 
 func concat(key string, all bool, op Operator, ops ...Operator) Operator {
-	return func(in []byte, pos uint, ns Nodes) (Nodes, error) {
-		var errs []error
-		curns := newNodes()
-		curns = append(curns, &Node{Key: key, Pos: pos, Value: in[pos:pos]})
-		newns := newNodes()
-		subns := newNodes()
-		for _, op := range append([]Operator{op}, ops...) {
-			newns.clear()
-			for _, n := range curns {
-				var err error
-				subns.clear()
-				if subns, err = op(in, n.Pos+uint(len(n.Value)), subns); err == nil {
+	return func(in []byte, pos uint, ns *Nodes) error {
+		resns := NewNodes()
+		defer resns.Free()
+
+		resns.Append(
+			loadOrStoreNode(
+				nodeCacheKey{key: key, pos: pos},
+				func() *Node {
+					return &Node{
+						Key:   key,
+						Pos:   pos,
+						Value: in[pos:pos],
+					}
+				},
+			),
+		)
+
+		newns := NewNodes()
+		defer newns.Free()
+		subns := NewNodes()
+		defer subns.Free()
+
+		errs := make([]error, 0, len(ops)+1)
+
+		runOp := func(op Operator) bool {
+			newns.Clear()
+			for _, n := range resns {
+				subns.Clear()
+				if err := op(in, n.Pos+uint(len(n.Value)), &subns); err == nil {
 					for _, sn := range subns {
-						var nn *Node
-						if len(subns) == 1 {
-							nn = n
-							nn.Value = in[n.Pos : int(n.Pos)+len(n.Value)+len(sn.Value)]
-							nn.Children = append(n.Children, sn)
-						} else {
-							nn = &Node{
-								Key:      n.Key,
-								Pos:      n.Pos,
-								Value:    in[n.Pos : int(n.Pos)+len(n.Value)+len(sn.Value)],
-								Children: append(append(newNodes(), n.Children...), sn),
-							}
-						}
-						newns = append(newns, nn)
+						newns.Append(
+							loadOrStoreNode(
+								nodeCacheKey{
+									key,
+									n.Pos,
+									uint(len(n.Value) + len(sn.Value)),
+									in,
+									append(hashKeys(&n.Children), hashString([]byte(sn.Key))...),
+								},
+								func() *Node {
+									nn := &Node{
+										Key:   key,
+										Pos:   n.Pos,
+										Value: in[n.Pos : int(n.Pos)+len(n.Value)+len(sn.Value)],
+									}
+									nn.Children = append(append(NewNodes(), n.Children...), sn)
+									return nn
+								},
+							),
+						)
 					}
 				} else {
 					errs = append(errs, err)
@@ -163,33 +223,37 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 			}
 
 			if len(newns) > 0 {
-				curns.clear()
-				curns = append(curns, newns...)
+				resns.Clear()
+				resns.Append(newns...)
 				errs = errs[:0]
 			} else {
-				curns.clear()
-				break
+				resns.Clear()
+				return false
+			}
+			return true
+		}
+
+		if runOp(op) {
+			for _, op := range ops {
+				if !runOp(op) {
+					break
+				}
 			}
 		}
-		newns.free()
-		subns.free()
 
-		if len(curns) > 0 {
-			if len(curns) > 1 && !all {
-				curns[0] = curns.Best()
-				curns1 := curns[1:]
-				curns1.clear()
-				curns = curns[:1]
+		if len(resns) > 0 {
+			if len(resns) > 1 && !all {
+				ns.Append(resns.Best())
+			} else {
+				ns.Append(resns...)
 			}
-			ns = append(ns, curns...)
 			errs = errs[:0]
 		}
-		curns.free()
 
 		if len(errs) > 0 {
-			return ns, errtrace.Wrap(&operError{key, pos, multiError(errs)})
+			return errtrace.Wrap(&operError{key, pos, multiError(errs)})
 		}
-		return ns, nil
+		return nil
 	}
 }
 
@@ -219,77 +283,98 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 		minOp = concat(key, true, ps[0], ps[1:]...)
 	}
 
-	return func(in []byte, pos uint, ns Nodes) (Nodes, error) {
-		resns := newNodes()
+	return func(in []byte, pos uint, ns *Nodes) error {
+		resns := NewNodes()
+		defer resns.Free()
+
 		if min == 0 {
-			resns = append(resns, &Node{Key: key, Pos: pos, Value: in[pos:pos]})
+			resns.Append(
+				loadOrStoreNode(
+					nodeCacheKey{key: key, pos: pos},
+					func() *Node {
+						return &Node{
+							Key:   key,
+							Pos:   pos,
+							Value: in[pos:pos],
+						}
+					},
+				),
+			)
 		} else {
-			var err error
-			if resns, err = minOp(in, pos, resns); err != nil {
-				return ns, errtrace.Wrap(err)
+			if err := minOp(in, pos, &resns); err != nil {
+				return errtrace.Wrap(&operError{key, pos, err})
 			}
 		}
 
-		var (
-			errs []error
-			i    uint
-		)
-		curns := append(newNodes(), resns...)
-		newns := newNodes()
-		subns := newNodes()
+		curns := NewNodes()
+		defer curns.Free()
+		curns.Append(resns...)
+
+		newns := NewNodes()
+		defer newns.Free()
+		subns := NewNodes()
+		defer subns.Free()
+
 		if 0 < max && max < min {
 			max = min
 		}
-		for i = min; i < max || max == 0; i++ {
-			newns.clear()
+
+		errs := make([]error, 0, max-min+1)
+		for i := min; i < max || max == 0; i++ {
+			newns.Clear()
+
 			for _, n := range curns {
-				var err error
-				subns.clear()
-				if subns, err = op(in, n.Pos+uint(len(n.Value)), subns); err == nil {
+				subns.Clear()
+				if err := op(in, n.Pos+uint(len(n.Value)), &subns); err == nil {
 					for _, sn := range subns {
-						var chns Nodes
-						if len(subns) == 1 {
-							chns = append(n.Children, sn)
-						} else {
-							chns = append(append(newNodes(), n.Children...), sn)
-						}
-						newns = append(newns, &Node{
-							Key:      n.Key,
-							Pos:      n.Pos,
-							Value:    in[n.Pos : int(n.Pos)+len(n.Value)+len(sn.Value)],
-							Children: chns,
-						})
+						newns.Append(
+							loadOrStoreNode(
+								nodeCacheKey{
+									key,
+									n.Pos,
+									n.Pos + uint(len(n.Value)+len(sn.Value)),
+									in,
+									append(hashKeys(&n.Children), hashString([]byte(sn.Key))...),
+								},
+								func() *Node {
+									nn := &Node{
+										Key:   key,
+										Pos:   n.Pos,
+										Value: in[n.Pos : int(n.Pos)+len(n.Value)+len(sn.Value)],
+									}
+									nn.Children = append(append(NewNodes(), n.Children...), sn)
+									return nn
+								},
+							),
+						)
 					}
 				} else {
 					errs = append(errs, err)
 				}
 			}
+
 			if len(newns) > 0 && newns.Compare(curns) == 1 {
-				curns.clear()
-				curns = append(curns, newns...)
-				resns = append(resns, newns...)
+				curns.Clear()
+				curns.Append(newns...)
+				resns.Append(newns...)
 				errs = errs[:0]
 			} else {
 				break
 			}
 		}
-		curns.free()
-		newns.free()
-		subns.free()
 
 		if len(resns) > 0 {
 			if len(resns) > 1 {
 				sort.Sort(nodeSorter(resns))
 			}
-			ns = append(ns, resns...)
+			ns.Append(resns...)
 			errs = errs[:0]
 		}
-		resns.free()
 
 		if len(errs) > 0 {
-			return ns, errtrace.Wrap(&operError{key, pos, multiError(errs)})
+			return errtrace.Wrap(&operError{key, pos, multiError(errs)})
 		}
-		return ns, nil
+		return nil
 	}
 }
 
