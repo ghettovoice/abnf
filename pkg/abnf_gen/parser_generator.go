@@ -45,7 +45,7 @@ func (g *ParserGenerator) Rules() map[string]abnf.Rule {
 			g.rules = make(map[string]abnf.Rule, len(oprts))
 		}
 		for n, op := range oprts {
-			g.rules[n] = func(in []byte, ns abnf.Nodes) (abnf.Nodes, error) {
+			g.rules[n] = func(in []byte, ns *abnf.Nodes) error {
 				return op(in, 0, ns)
 			}
 		}
@@ -116,7 +116,7 @@ func (op ruleNameOperator) buildOprt(g *ParserGenerator) abnf.Operator {
 		return extRule.Operator
 	}
 
-	return func(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes, error) {
+	return func(in []byte, pos uint, ns *abnf.Nodes) error {
 		var (
 			oprt abnf.Operator
 			ok   bool

@@ -92,9 +92,9 @@ func (g *CodeGenerator) WriteTo(dst io.Writer) (int64, error) {
 				Params(
 					jen.Id("in").Index().Byte(),
 					jen.Id("pos").Uint(),
-					jen.Id("ns").Qual(mainPkg, "Nodes"),
+					jen.Id("ns").Op("*").Qual(mainPkg, "Nodes"),
 				).
-				Params(jen.Qual(mainPkg, "Nodes"), jen.Error()).
+				Error().
 				Block(
 					jen.Id("desc").Dot(r.privName()+"Once").Dot("Do").Call(
 						jen.Func().Params().Block(
@@ -108,7 +108,7 @@ func (g *CodeGenerator) WriteTo(dst io.Writer) (int64, error) {
 							jen.Id("ns"),
 						)
 						if g.WrapErrors {
-							stmt = jen.Qual(errtracePkg, "Wrap2").Call(stmt)
+							stmt = jen.Qual(errtracePkg, "Wrap").Call(stmt)
 						}
 						gr.Add(stmt)
 					}),
@@ -131,9 +131,9 @@ func (g *CodeGenerator) WriteTo(dst io.Writer) (int64, error) {
 				Id(r.pubName()).
 				Params(
 					jen.Id("in").Index().Byte(),
-					jen.Id("ns").Qual(mainPkg, "Nodes"),
+					jen.Id("ns").Op("*").Qual(mainPkg, "Nodes"),
 				).
-				Params(jen.Qual(mainPkg, "Nodes"), jen.Error()).
+				Error().
 				Block(
 					jen.ReturnFunc(func(gr *jen.Group) {
 						stmt := jen.Id("oprsDescr").Dot(r.pubName()).Call(
@@ -142,7 +142,7 @@ func (g *CodeGenerator) WriteTo(dst io.Writer) (int64, error) {
 							jen.Id("ns"),
 						)
 						if g.WrapErrors {
-							stmt = jen.Qual(errtracePkg, "Wrap2").Call(stmt)
+							stmt = jen.Qual(errtracePkg, "Wrap").Call(stmt)
 						}
 						gr.Add(stmt)
 					}),

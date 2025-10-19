@@ -24,10 +24,13 @@ func TestRulesDescr_Rule(t *testing.T) {
 		},
 	}
 
+	ns := abnf.NewNodes()
+	defer ns.Free()
+
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ns, err := abnf_def.Rules().Rule([]byte(c.in), nil)
-			if err != nil {
+			ns.Clear()
+			if err := abnf_def.Rules().Rule([]byte(c.in), &ns); err != nil {
 				t.Fatalf("abnf_def.Rules().Rule(in, ns) error = %v, want nil", err)
 			}
 
@@ -47,6 +50,9 @@ func TestRulesDescr_Rulelist(t *testing.T) {
 		{"def", "./rules.abnf"},
 	}
 
+	ns := abnf.NewNodes()
+	defer ns.Free()
+
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			in, err := os.ReadFile(c.in)
@@ -54,8 +60,8 @@ func TestRulesDescr_Rulelist(t *testing.T) {
 				t.Fatalf("os.ReadFile() error = %v, want nil", err)
 			}
 
-			ns, err := abnf_def.Rules().Rulelist(in, nil)
-			if err != nil {
+			ns.Clear()
+			if err := abnf_def.Rules().Rulelist(in, &ns); err != nil {
 				t.Fatalf("abnf_def.Rules().Rulelist(in, nil) error = %v, want nil", err)
 			}
 
@@ -71,13 +77,14 @@ func BenchmarkRulesDescr_Rulelist(b *testing.B) {
 	if err != nil {
 		b.Fatalf("read ABNF file: %s", err)
 	}
-	ns := make(abnf.Nodes, 0, 40)
+
+	ns := abnf.NewNodes()
+	defer ns.Free()
 
 	b.ResetTimer()
 	for b.Loop() {
-		var err error
-		ns, err = abnf_def.Rules().Rulelist(in, ns[:0])
-		if err != nil {
+		ns.Clear()
+		if err := abnf_def.Rules().Rulelist(in, &ns); err != nil {
 			b.Errorf("abnf_def.Rules().Rulelist(in, ns) error = %v, want nil", err)
 			continue
 		}

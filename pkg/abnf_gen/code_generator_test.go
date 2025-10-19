@@ -144,7 +144,7 @@ type OperatorsDescr struct {
 }
 
 // Struct operator: struct = %x41-5A / %x61-7A
-func (desc *OperatorsDescr) Struct(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes, error) {
+func (desc *OperatorsDescr) Struct(in []byte, pos uint, ns *abnf.Nodes) error {
 	desc._structOnce.Do(func() {
 		desc._struct = abnf.Alt(
 			"struct",
@@ -156,7 +156,7 @@ func (desc *OperatorsDescr) Struct(in []byte, pos uint, ns abnf.Nodes) (abnf.Nod
 }
 
 // Type operator: type = "0" / "1"
-func (desc *OperatorsDescr) Type(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes, error) {
+func (desc *OperatorsDescr) Type(in []byte, pos uint, ns *abnf.Nodes) error {
 	desc._typeOnce.Do(func() {
 		desc._type = abnf.Alt(
 			"type",
@@ -168,7 +168,7 @@ func (desc *OperatorsDescr) Type(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes
 }
 
 // Var operator: var = type / struct
-func (desc *OperatorsDescr) Var(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes, error) {
+func (desc *OperatorsDescr) Var(in []byte, pos uint, ns *abnf.Nodes) error {
 	desc._varOnce.Do(func() {
 		desc._var = abnf.Alt(
 			"var",
@@ -183,17 +183,17 @@ func (desc *OperatorsDescr) Var(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes,
 type RulesDescr struct{}
 
 // Struct rule: struct = %x41-5A / %x61-7A
-func (*RulesDescr) Struct(in []byte, ns abnf.Nodes) (abnf.Nodes, error) {
+func (*RulesDescr) Struct(in []byte, ns *abnf.Nodes) error {
 	return oprsDescr.Struct(in, 0, ns)
 }
 
 // Type rule: type = "0" / "1"
-func (*RulesDescr) Type(in []byte, ns abnf.Nodes) (abnf.Nodes, error) {
+func (*RulesDescr) Type(in []byte, ns *abnf.Nodes) error {
 	return oprsDescr.Type(in, 0, ns)
 }
 
 // Var rule: var = type / struct
-func (*RulesDescr) Var(in []byte, ns abnf.Nodes) (abnf.Nodes, error) {
+func (*RulesDescr) Var(in []byte, ns *abnf.Nodes) error {
 	return oprsDescr.Var(in, 0, ns)
 }
 `
@@ -274,7 +274,7 @@ type OperatorsDescr struct {
 }
 
 // R1 operator: r1 = r2 / "2" / "3" / "4"
-func (desc *OperatorsDescr) R1(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes, error) {
+func (desc *OperatorsDescr) R1(in []byte, pos uint, ns *abnf.Nodes) error {
 	desc.r1Once.Do(func() {
 		desc.r1 = abnf.Alt(
 			"r1",
@@ -288,7 +288,7 @@ func (desc *OperatorsDescr) R1(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes, 
 }
 
 // R2 operator: r2 = BIT / ALPHA
-func (desc *OperatorsDescr) R2(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes, error) {
+func (desc *OperatorsDescr) R2(in []byte, pos uint, ns *abnf.Nodes) error {
 	desc.r2Once.Do(func() {
 		desc.r2 = abnf.Alt(
 			"r2",
@@ -303,12 +303,12 @@ func (desc *OperatorsDescr) R2(in []byte, pos uint, ns abnf.Nodes) (abnf.Nodes, 
 type RulesDescr struct{}
 
 // R1 rule: r1 = r2 / "2" / "3" / "4"
-func (*RulesDescr) R1(in []byte, ns abnf.Nodes) (abnf.Nodes, error) {
+func (*RulesDescr) R1(in []byte, ns *abnf.Nodes) error {
 	return oprsDescr.R1(in, 0, ns)
 }
 
 // R2 rule: r2 = BIT / ALPHA
-func (*RulesDescr) R2(in []byte, ns abnf.Nodes) (abnf.Nodes, error) {
+func (*RulesDescr) R2(in []byte, ns *abnf.Nodes) error {
 	return oprsDescr.R2(in, 0, ns)
 }
 `

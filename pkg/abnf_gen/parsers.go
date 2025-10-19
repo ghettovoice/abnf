@@ -228,8 +228,9 @@ const (
 )
 
 func parseRules(s []byte) (map[string]rule, error) {
-	ns, err := abnf_def.Rules().Rulelist(s, nil)
-	if err != nil {
+	ns := abnf.NewNodes()
+	defer ns.Free()
+	if err := abnf_def.Rules().Rulelist(s, &ns); err != nil {
 		return nil, errtrace.Wrap(fmt.Errorf("parse rules: %w", err))
 	}
 	n := ns.Best()
@@ -242,7 +243,7 @@ func parseRules(s []byte) (map[string]rule, error) {
 func parseRuleslistNode(n *abnf.Node) map[string]rule {
 	rules := make(map[string]rule)
 	for _, n := range n.Children {
-		if n := n.GetNode("rule"); n != nil {
+		if n, ok := n.GetNode("rule"); ok {
 			newRule := parseRuleNode(n)
 			if foundRule, ok := rules[newRule.name]; ok && newRule.extend {
 				rules[newRule.name] = mergeRules(newRule.name, foundRule, newRule)
@@ -293,7 +294,7 @@ func parseAlternationNode(n *abnf.Node) operator {
 	}
 	// traverse '*(*c-wsp "/" *c-wsp concatenation)' part
 	for _, n := range n.Children[1].Children {
-		if n := n.GetNode("concatenation"); n != nil {
+		if n, ok := n.GetNode("concatenation"); ok {
 			ops = append(ops, parseConcatenationNode(n))
 		}
 	}
@@ -309,7 +310,7 @@ func parseConcatenationNode(n *abnf.Node) operator {
 	}
 	// traverse '*(1*c-wsp repetition)' part
 	for _, n := range n.Children[1].Children {
-		if n := n.GetNode("repetition"); n != nil {
+		if n, ok := n.GetNode("repetition"); ok {
 			ops = append(ops, parseRepetitionNode(n))
 		}
 	}
@@ -437,8 +438,8 @@ func fmtNodeValue(n *abnf.Node) string {
 }
 
 func mustGetNode(n *abnf.Node, key string) *abnf.Node {
-	sn := n.GetNode(key)
-	if sn == nil {
+	sn, ok := n.GetNode(key)
+	if !ok {
 		panic(fmt.Errorf("node '%s' not found", key))
 	}
 	return sn

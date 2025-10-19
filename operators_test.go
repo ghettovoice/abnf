@@ -845,25 +845,29 @@ func TestOperator(t *testing.T) {
 		},
 	}
 
+	ns := abnf.NewNodes()
+	defer ns.Free()
+
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			gotNs, gotErr := c.op(c.in, 0, nil)
+			ns.Clear()
+			err := c.op(c.in, 0, &ns)
 			if c.wantErr == nil {
-				if gotErr != nil {
-					t.Fatalf("op(in, 0, nil) error = %q, want nil", gotErr)
+				if err != nil {
+					t.Fatalf("op(in, 0, nil) error = %q, want nil", err)
 				}
-				if !cmp.Equal(gotNs, c.wantNs) {
+				if !cmp.Equal(ns, c.wantNs) {
 					t.Fatalf("op(in, 0, nil) = %+v, want %+v\ndiff (-got +want):\n%v",
-						gotNs, c.wantNs,
-						cmp.Diff(gotNs, c.wantNs),
+						ns, c.wantNs,
+						cmp.Diff(ns, c.wantNs),
 					)
 				}
 			} else {
 				// fmt.Printf("%+v\n", gotErr)
-				if !cmp.Equal(gotErr, c.wantErr, cmpopts.EquateErrors()) {
+				if !cmp.Equal(err, c.wantErr, cmpopts.EquateErrors()) {
 					t.Fatalf("op(in, 0, nil) error = %q, want %q\ndiff (-got +want):\n%v",
-						gotErr, c.wantErr,
-						cmp.Diff(gotErr, c.wantErr, cmpopts.EquateErrors()),
+						err, c.wantErr,
+						cmp.Diff(err, c.wantErr, cmpopts.EquateErrors()),
 					)
 				}
 			}
@@ -874,14 +878,14 @@ func TestOperator(t *testing.T) {
 func BenchmarkLiteral(b *testing.B) {
 	op := abnf.Literal("z", []byte("z"))
 	in := []byte("zzz")
-	ns := make(abnf.Nodes, 0, 1)
+
+	ns := abnf.NewNodes()
+	defer ns.Free()
 
 	b.ResetTimer()
 	for b.Loop() {
-		var err error
-		ns = ns[:0]
-		ns, err = op(in, 0, ns)
-		if err != nil {
+		ns.Clear()
+		if err := op(in, 0, &ns); err != nil {
 			b.Errorf("operator returned error %q, want nil", err)
 			continue
 		}
@@ -894,14 +898,14 @@ func BenchmarkLiteral(b *testing.B) {
 func BenchmarkLiteral_unicode(b *testing.B) {
 	op := abnf.Literal("м", []byte("м"))
 	in := []byte("мир")
-	ns := make(abnf.Nodes, 0, 1)
+
+	ns := abnf.NewNodes()
+	defer ns.Free()
 
 	b.ResetTimer()
 	for b.Loop() {
-		var err error
-		ns = ns[:0]
-		ns, err = op(in, 0, ns)
-		if err != nil {
+		ns.Clear()
+		if err := op(in, 0, &ns); err != nil {
 			b.Errorf("operator returned error %q, want nil", err)
 			continue
 		}
@@ -914,14 +918,14 @@ func BenchmarkLiteral_unicode(b *testing.B) {
 func BenchmarkLiteralCS(b *testing.B) {
 	op := abnf.LiteralCS("Z", []byte("Z"))
 	in := []byte("ZZZ")
-	ns := make(abnf.Nodes, 0, 1)
+
+	ns := abnf.NewNodes()
+	defer ns.Free()
 
 	b.ResetTimer()
 	for b.Loop() {
-		var err error
-		ns = ns[:0]
-		ns, err = op(in, 0, ns)
-		if err != nil {
+		ns.Clear()
+		if err := op(in, 0, &ns); err != nil {
 			b.Errorf("operator returned error %q, want nil", err)
 			continue
 		}
@@ -934,14 +938,14 @@ func BenchmarkLiteralCS(b *testing.B) {
 func BenchmarkRange(b *testing.B) {
 	op := abnf.Range("%x61-7A", []byte{97}, []byte{122})
 	in := []byte("zzz")
-	ns := make(abnf.Nodes, 0, 1)
+
+	ns := abnf.NewNodes()
+	defer ns.Free()
 
 	b.ResetTimer()
 	for b.Loop() {
-		var err error
-		ns = ns[:0]
-		ns, err = op(in, 0, ns)
-		if err != nil {
+		ns.Clear()
+		if err := op(in, 0, &ns); err != nil {
 			b.Errorf("operator returned error %q, want nil", err)
 			continue
 		}
@@ -962,19 +966,21 @@ func BenchmarkAlt(tb *testing.B) {
 		[]byte("b"),
 		[]byte("c"),
 	}
-	ns := make(abnf.Nodes, 0, 1)
+
+	ns := abnf.NewNodes()
+	defer ns.Free()
 
 	for _, in := range inputs {
 		tb.Run(string(in), func(b *testing.B) {
 			b.ResetTimer()
 			for b.Loop() {
-				var err error
-				ns, err = op(in, 0, ns[:0])
-				if err != nil {
-					b.Fatalf("operator returned error %q, want nil", err)
+				ns.Clear()
+				if err := op(in, 0, &ns); err != nil {
+					b.Errorf("operator returned error %q, want nil", err)
+					continue
 				}
 				if len(ns) == 0 {
-					b.Fatal("operator returned 0 nodes, want at least 1")
+					b.Error("operator returned 0 nodes, want at least 1")
 				}
 			}
 		})
@@ -984,13 +990,14 @@ func BenchmarkAlt(tb *testing.B) {
 func BenchmarkConcat(b *testing.B) {
 	op := abnf.Concat(`"ab" "c"`, abnf.Literal("ab", []byte("ab")), abnf.Literal("c", []byte("c")))
 	in := []byte("abc")
-	ns := make(abnf.Nodes, 0, 1)
+
+	ns := abnf.NewNodes()
+	defer ns.Free()
 
 	b.ResetTimer()
 	for b.Loop() {
-		var err error
-		ns, err = op(in, 0, ns[:0])
-		if err != nil {
+		ns.Clear()
+		if err := op(in, 0, &ns); err != nil {
 			b.Errorf("operator returned error %q, want nil", err)
 			continue
 		}
@@ -1002,23 +1009,57 @@ func BenchmarkConcat(b *testing.B) {
 
 func BenchmarkRepeat0Inf(b *testing.B) {
 	op := abnf.Repeat0Inf(`*"a"`, abnf.Literal("a", []byte("a")))
-	inputs := [][]byte{[]byte(""), []byte("a"), []byte("aaa")}
-	ns := make(abnf.Nodes, 0, 9)
+	inputs := [][]byte{
+		[]byte(""),
+		[]byte("a"),
+		[]byte("aaa"),
+	}
 
-	b.ResetTimer()
+	ns := abnf.NewNodes()
+	defer ns.Free()
+
 	for _, in := range inputs {
 		b.Run(string(in), func(b *testing.B) {
 			b.ResetTimer()
 			for b.Loop() {
-				var err error
-				ns, err = op(in, 0, ns[:0])
-				if err != nil {
-					b.Fatalf("operator returned error %q, want nil", err)
+				ns.Clear()
+				if err := op(in, 0, &ns); err != nil {
+					b.Errorf("operator returned error %q, want nil", err)
+					continue
 				}
 				if len(ns) == 0 {
-					b.Fatal("operator returned 0 nodes, want at least 1")
+					b.Error("operator returned 0 nodes, want at least 1")
 				}
 			}
 		})
+	}
+}
+
+func BenchmarkCombo(b *testing.B) {
+	op := abnf.Repeat0Inf(`*([ "a" ] *2( "b" / "c" ))`,
+		abnf.Concat(`[ "a" ] *2( "b" / "c" )`,
+			abnf.Optional(`[ "a" ]`, abnf.Literal("a", []byte("a"))),
+			abnf.Repeat(`*2( "b" / "c" )`, 0, 2,
+				abnf.Alt(`"b" / "c"`,
+					abnf.Literal("b", []byte("b")),
+					abnf.Literal("c", []byte("cc")),
+				),
+			),
+		),
+	)
+
+	ns := abnf.NewNodes()
+	defer ns.Free()
+
+	b.ResetTimer()
+	for b.Loop() {
+		ns.Clear()
+		if err := op([]byte("abc"), 0, &ns); err != nil {
+			b.Errorf("operator returned error %q, want nil", err)
+			continue
+		}
+		if len(ns) == 0 {
+			b.Error("operator returned 0 nodes, want at least 1")
+		}
 	}
 }

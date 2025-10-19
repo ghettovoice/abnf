@@ -20,14 +20,18 @@ func TestNode_GetNode(t *testing.T) {
 		},
 	}
 
-	if got := n.GetNode("ab"); !cmp.Equal(got, n) {
-		t.Errorf("n.GetNode(\"ab\") = %+v, want %+v\ndiff (-got +want):\n%v", got, n, cmp.Diff(got, n))
+	if got, ok := n.GetNode("ab"); !ok || !cmp.Equal(got, n) {
+		t.Errorf("n.GetNode(\"ab\") = (%+v, %v), want (%+v, true)\ndiff (-got +want):\n%v", got, ok, n, cmp.Diff(got, n))
 	}
-	if got, want := n.GetNode("a"), (&abnf.Node{Key: "a", Value: []byte("a")}); !cmp.Equal(got, want) {
-		t.Errorf("n.GetNode(\"a\") = %+v, want %+v\ndiff (-got +want):\n%v", got, want, cmp.Diff(got, want))
+	if got, ok := n.GetNode("a"); !ok || !cmp.Equal(got, &abnf.Node{Key: "a", Value: []byte("a")}) {
+		t.Errorf("n.GetNode(\"a\") = (%+v, %v), want (%+v, true)\ndiff (-got +want):\n%v",
+			got, ok,
+			&abnf.Node{Key: "a", Value: []byte("a")},
+			cmp.Diff(got, &abnf.Node{Key: "a", Value: []byte("a")}),
+		)
 	}
-	if got := n.GetNode("d"); got != nil {
-		t.Errorf("n.GetNode(\"d\") = %+v, want nil", got)
+	if got, ok := n.GetNode("d"); ok || got != nil {
+		t.Errorf("n.GetNode(\"d\") = (%+v, %v), want (nil, false)", got, ok)
 	}
 }
 

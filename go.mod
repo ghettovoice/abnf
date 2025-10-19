@@ -6,6 +6,7 @@ require (
 	braces.dev/errtrace v0.4.0
 	github.com/dave/jennifer v1.7.1
 	github.com/google/go-cmp v0.7.0
+	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/urfave/cli/v3 v3.4.1
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/gofumpt v0.9.1
@@ -85,7 +86,6 @@ require (
 	github.com/gostaticanalysis/nilerr v0.1.1 // indirect
 	github.com/hashicorp/go-immutable-radix/v2 v2.1.0 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
