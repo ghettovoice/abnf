@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 )
 
 const (
@@ -70,30 +71,40 @@ func (e multiError) writeError(sb *strings.Builder, depth int) {
 	}
 }
 
-// const multiErrCap = 10
+const multiErrCap = 10
 
-// var multiErrPool = &sync.Pool{
-// 	New: func() any {
-// 		errs := multiError(make([]error, 0, multiErrCap))
-// 		return &errs
-// 	},
-// }
+var multiErrPool = &sync.Pool{
+	New: func() any {
+		errs := multiError(make([]error, 0, multiErrCap))
+		return &errs
+	},
+}
 
-// func newMultiErr(c int) multiError {
-// 	var err multiError
-// 	if c <= multiErrCap {
-// 		err = *(multiErrPool.Get().(*multiError))
-// 	} else {
-// 		err = make(multiError, 0, c)
-// 	}
-// 	return err
-// }
+func newMultiErr(c uint) multiError {
+	var err multiError
+	if c <= multiErrCap {
+		errPtr := multiErrPool.Get().(*multiError)
+		err = *errPtr
+	} else {
+		err = make(multiError, 0, c)
+	}
+	return err
+}
 
-// func freeMultiErr(err multiError) {
-// 	if err == nil || cap(err) > 10*multiErrCap {
-// 		return
-// 	}
+func (e *multiError) clear() {
+	if e == nil {
+		return
+	}
 
-// 	clear(err)
-// 	multiErrPool.Put(&err)
-// }
+	clear(*e)
+	*e = (*e)[:0]
+}
+
+func (e *multiError) free() {
+	if e == nil || cap(*e) > 10*multiErrCap {
+		return
+	}
+
+	e.clear()
+	multiErrPool.Put(e)
+}
