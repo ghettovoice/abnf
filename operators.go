@@ -90,40 +90,24 @@ func Range(key string, low, high []byte) Operator {
 
 func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 	return func(in []byte, pos uint, ns *Nodes) error {
-		resns := NewNodes()
+		resns, subns := NewNodes(), NewNodes()
 		defer resns.Free()
-		subns := NewNodes()
 		defer subns.Free()
 
 		errs := newMultiErr(uint(len(ops) + 1))
 
 		runOp := func(op Operator) bool {
 			subns.Clear()
-			if err := op(in, pos, &subns); err == nil {
-				for _, sn := range subns {
-					resns.Append(
-						loadOrStoreNode(
-							newNodeCacheKey(key, pos, uint(len(sn.Value)), in, sn),
-							func() *Node {
-								nn := &Node{
-									Key:   key,
-									Pos:   pos,
-									Value: in[pos : int(pos)+len(sn.Value)],
-								}
-								nn.Children = append(NewNodes(), sn)
-								return nn
-							},
-						),
-					)
-				}
-			} else {
+			if err := op(in, pos, &subns); err != nil {
 				errs = append(errs, err)
+				return true
 			}
 
-			if len(subns) > 0 && fm {
-				return false
+			for _, sn := range subns {
+				resns.Append(newAltNode(key, pos, sn, in))
 			}
-			return true
+
+			return !fm || len(subns) == 0
 		}
 
 		if runOp(op) {
@@ -150,6 +134,22 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 	}
 }
 
+// newAltNode creates a new alternative node with the given key, position, and subnode
+func newAltNode(key string, pos uint, sn *Node, in []byte) *Node {
+	return loadOrStoreNode(
+		newNodeCacheKey(key, pos, uint(len(sn.Value)), in, sn),
+		func() *Node {
+			nn := &Node{
+				Key:   key,
+				Pos:   pos,
+				Value: in[pos : pos+uint(len(sn.Value))],
+			}
+			nn.Children = append(NewNodes(), sn)
+			return nn
+		},
+	)
+}
+
 // Alt defines a sequence of alternative elements that are separated by a forward slash ("/").
 // Created operator will return all matched alternatives.
 // It returns joined errors if all alternatives failed.
@@ -168,63 +168,39 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 	return func(in []byte, pos uint, ns *Nodes) error {
 		resns := NewNodes()
 		defer resns.Free()
+		resns.Append(loadOrStoreNode(
+			newNodeCacheKey(key, pos, 0, in),
+			func() *Node { return &Node{Key: key, Pos: pos, Value: in[pos:pos]} },
+		))
 
-		resns.Append(
-			loadOrStoreNode(
-				newNodeCacheKey(key, pos, 0, in),
-				func() *Node {
-					return &Node{
-						Key:   key,
-						Pos:   pos,
-						Value: in[pos:pos],
-					}
-				},
-			),
-		)
-
-		newns := NewNodes()
+		newns, subns := NewNodes(), NewNodes()
 		defer newns.Free()
-		subns := NewNodes()
 		defer subns.Free()
 
 		errs := newMultiErr(uint(len(ops) + 1))
 
 		runOp := func(op Operator) bool {
 			newns.Clear()
+
 			for _, n := range resns {
 				subns.Clear()
-				if err := op(in, n.Pos+uint(len(n.Value)), &subns); err == nil {
-					for _, sn := range subns {
-						ck := newNodeCacheKey(key, n.Pos, uint(len(n.Value)+len(sn.Value)), in, n.Children...)
-						ck.writeChildKeys(0, sn)
-						newns.Append(
-							loadOrStoreNode(
-								ck,
-								func() *Node {
-									nn := &Node{
-										Key:   key,
-										Pos:   n.Pos,
-										Value: in[n.Pos : int(n.Pos)+len(n.Value)+len(sn.Value)],
-									}
-									nn.Children = append(append(NewNodes(), n.Children...), sn)
-									return nn
-								},
-							),
-						)
-					}
-				} else {
+				if err := op(in, n.Pos+uint(len(n.Value)), &subns); err != nil {
 					errs = append(errs, err)
+					continue
+				}
+
+				for _, sn := range subns {
+					newns.Append(newConcatNode(key, n, sn, in))
 				}
 			}
 
-			if len(newns) > 0 {
-				resns.Clear()
-				resns.Append(newns...)
-				errs.clear()
-			} else {
+			if len(newns) == 0 {
 				resns.Clear()
 				return false
 			}
+
+			resns, newns = newns, resns
+			errs.clear()
 			return true
 		}
 
@@ -253,6 +229,21 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 	}
 }
 
+// newConcatNode creates a new node that represents the concatenation of n and sn
+func newConcatNode(key string, n, sn *Node, in []byte) *Node {
+	ck := newNodeCacheKey(key, n.Pos, uint(len(n.Value)+len(sn.Value)), in, n.Children...)
+	ck.writeChildKeys(0, sn)
+	return loadOrStoreNode(ck, func() *Node {
+		nn := &Node{
+			Key:      key,
+			Pos:      n.Pos,
+			Value:    in[n.Pos : int(n.Pos)+len(n.Value)+len(sn.Value)],
+			Children: append(append(NewNodes(), n.Children...), sn),
+		}
+		return nn
+	})
+}
+
 // Concat defines a simple, ordered string of values.
 // Created operator will return the longest alternative.
 // It returns error if one of the operators failed.
@@ -270,13 +261,14 @@ func ConcatAll(key string, op Operator, ops ...Operator) Operator {
 // Repeat defines a variable repetition.
 // It returns error in case when operator wasn't matched min times.
 func Repeat(key string, min, max uint, op Operator) Operator {
+	// Create operator for minimum required repetitions
 	var minOp Operator
 	if min > 0 {
-		ps := make([]Operator, min)
+		ops := make([]Operator, min)
 		for i := range min {
-			ps[i] = op
+			ops[i] = op
 		}
-		minOp = concat(key, true, ps[0], ps[1:]...)
+		minOp = concat(key, true, ops[0], ops[1:]...)
 	}
 
 	return func(in []byte, pos uint, ns *Nodes) error {
@@ -284,36 +276,29 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 		defer resns.Free()
 
 		if min == 0 {
-			resns.Append(
-				loadOrStoreNode(
-					newNodeCacheKey(key, pos, 0, in),
-					func() *Node {
-						return &Node{
-							Key:   key,
-							Pos:   pos,
-							Value: in[pos:pos],
-						}
-					},
-				),
-			)
-		} else {
-			if err := minOp(in, pos, &resns); err != nil {
-				return operError{key, pos, err} //errtrace:skip
-			}
+			resns.Append(loadOrStoreNode(
+				newNodeCacheKey(key, pos, 0, in),
+				func() *Node { return &Node{Key: key, Pos: pos, Value: in[pos:pos]} },
+			))
+		} else if err := minOp(in, pos, &resns); err != nil {
+			return operError{key, pos, err} //errtrace:skip
 		}
-
-		curns := NewNodes()
-		defer curns.Free()
-		curns.Append(resns...)
-
-		newns := NewNodes()
-		defer newns.Free()
-		subns := NewNodes()
-		defer subns.Free()
 
 		if 0 < max && max < min {
 			max = min
 		}
+
+		if max != 0 && min == max {
+			ns.Append(resns...)
+			return nil
+		}
+
+		curns, newns, subns := NewNodes(), NewNodes(), NewNodes()
+		defer curns.Free()
+		defer newns.Free()
+		defer subns.Free()
+
+		curns.Append(resns...)
 
 		errs := newMultiErr(max - min + 1)
 
@@ -322,39 +307,23 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 
 			for _, n := range curns {
 				subns.Clear()
-				if err := op(in, n.Pos+uint(len(n.Value)), &subns); err == nil {
-					for _, sn := range subns {
-						ck := newNodeCacheKey(key, n.Pos, uint(len(n.Value)+len(sn.Value)), in, n.Children...)
-						ck.writeChildKeys(0, sn)
-						newns.Append(
-							loadOrStoreNode(
-								ck,
-								func() *Node {
-									nn := &Node{
-										Key:   key,
-										Pos:   n.Pos,
-										Value: in[n.Pos : int(n.Pos)+len(n.Value)+len(sn.Value)],
-									}
-									nn.Children = append(append(NewNodes(), n.Children...), sn)
-									return nn
-								},
-							),
-						)
-					}
-				} else {
+				if err := op(in, n.Pos+uint(len(n.Value)), &subns); err != nil {
 					errs = append(errs, err)
+					continue
+				}
+
+				for _, sn := range subns {
+					newns.Append(newConcatNode(key, n, sn, in))
 				}
 			}
 
-			if len(newns) > 0 && newns.Compare(curns) == 1 {
-				curns.Clear()
-				curns.Append(newns...)
-				resns.Append(newns...)
-
-				errs.clear()
-			} else {
+			if len(newns) == 0 || newns.Compare(curns) != 1 {
 				break
 			}
+
+			curns, newns = newns, curns
+			resns.Append(curns...)
+			errs.clear()
 		}
 
 		if len(resns) > 0 {
@@ -374,7 +343,6 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 }
 
 // RepeatN defines a specific repetition.
-// It returns error in case when operator wasn't matched n times.
 func RepeatN(key string, n uint, op Operator) Operator {
 	return Repeat(key, n, n, op)
 }
@@ -396,13 +364,16 @@ func Optional(key string, op Operator) Operator {
 	return Repeat(key, 0, 1, op)
 }
 
+// nodeSorter implements sort.Interface for sorting nodes by length, children count, position and key in descending order.
 type nodeSorter Nodes
 
 func (ns nodeSorter) Len() int { return len(ns) }
 
 func (ns nodeSorter) Less(i, j int) bool {
 	return len(ns[i].Value) > len(ns[j].Value) ||
-		len(ns[i].Children) > len(ns[j].Children)
+		len(ns[i].Children) > len(ns[j].Children) ||
+		ns[i].Pos < ns[j].Pos ||
+		ns[i].Key < ns[j].Key
 }
 
 func (ns nodeSorter) Swap(i, j int) { ns[i], ns[j] = ns[j], ns[i] }
