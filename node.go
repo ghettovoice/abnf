@@ -248,7 +248,7 @@ func (ns *Nodes) Clear() {
 func (ns *Nodes) Free() {
 	ns.Clear()
 
-	if ns == nil || cap(*ns) == 0 || cap(*ns) > 2*NodesCap {
+	if ns == nil || cap(*ns) == 0 || cap(*ns) > 10*NodesCap {
 		return
 	}
 

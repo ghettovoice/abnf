@@ -21,9 +21,9 @@ type operError struct {
 	err error
 }
 
-func (e *operError) Unwrap() error { return e.err }
+func (e operError) Unwrap() error { return e.err }
 
-func (e *operError) Error() string {
+func (e operError) Error() string {
 	var sb strings.Builder
 	e.writeError(&sb, 0)
 	return sb.String()
@@ -69,3 +69,31 @@ func (e multiError) writeError(sb *strings.Builder, depth int) {
 		}
 	}
 }
+
+// const multiErrCap = 10
+
+// var multiErrPool = &sync.Pool{
+// 	New: func() any {
+// 		errs := multiError(make([]error, 0, multiErrCap))
+// 		return &errs
+// 	},
+// }
+
+// func newMultiErr(c int) multiError {
+// 	var err multiError
+// 	if c <= multiErrCap {
+// 		err = *(multiErrPool.Get().(*multiError))
+// 	} else {
+// 		err = make(multiError, 0, c)
+// 	}
+// 	return err
+// }
+
+// func freeMultiErr(err multiError) {
+// 	if err == nil || cap(err) > 10*multiErrCap {
+// 		return
+// 	}
+
+// 	clear(err)
+// 	multiErrPool.Put(&err)
+// }
