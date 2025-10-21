@@ -2,6 +2,7 @@ package abnf_gen_test
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"testing"
 
@@ -315,4 +316,23 @@ func (*RulesDescr) R2(in []byte, ns *abnf.Nodes) error {
 	if got := dst.String(); got != want {
 		t.Fatalf("got != want\ndiff (-got +want)\n%v", cmp.Diff(got, want))
 	}
+}
+
+func TestCodeGenerator_tmp(t *testing.T) {
+	rules := bytes.NewBuffer([]byte(
+		"r1 = \"1\" / \"2\"\n" +
+			"r2 = r1\n",
+	))
+	g := &abnf_gen.CodeGenerator{
+		PackageName: "extend_rule",
+	}
+	if _, err := g.ReadFrom(rules); err != nil {
+		t.Fatal(err)
+	}
+
+	var dst bytes.Buffer
+	if _, err := g.WriteTo(&dst); err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(dst.String())
 }

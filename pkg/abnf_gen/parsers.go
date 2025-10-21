@@ -246,10 +246,15 @@ func parseRuleslistNode(n *abnf.Node) map[string]rule {
 		if n, ok := n.GetNode("rule"); ok {
 			newRule := parseRuleNode(n)
 			if foundRule, ok := rules[newRule.name]; ok && newRule.extend {
-				rules[newRule.name] = mergeRules(newRule.name, foundRule, newRule)
-			} else {
-				rules[newRule.name] = newRule
+				newRule = mergeRules(newRule.name, foundRule, newRule)
 			}
+			if op, ok := newRule.oprt.(ruleNameOperator); ok {
+				newRule.oprt = concatOperator{
+					k:     op.k,
+					oprts: []operator{op},
+				}
+			}
+			rules[newRule.name] = newRule
 		}
 	}
 	return rules
