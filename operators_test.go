@@ -856,10 +856,10 @@ func TestOperator(t *testing.T) {
 				if err != nil {
 					t.Fatalf("op(in, 0, nil) error = %q, want nil", err)
 				}
-				if !cmp.Equal(ns, c.wantNs) {
+				if !cmp.Equal(ns, c.wantNs, cmpopts.EquateEmpty()) {
 					t.Fatalf("op(in, 0, nil) = %+v, want %+v\ndiff (-got +want):\n%v",
 						ns, c.wantNs,
-						cmp.Diff(ns, c.wantNs),
+						cmp.Diff(ns, c.wantNs, cmpopts.EquateEmpty()),
 					)
 				}
 			} else {
