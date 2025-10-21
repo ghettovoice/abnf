@@ -24,7 +24,7 @@ func literal(key string, want []byte, ci bool) Operator {
 
 		ns.Append(
 			loadOrStoreNode(
-				nodeCacheKey{key, pos, uint(len(got)), in, nil},
+				newNodeCacheKey(key, pos, uint(len(got)), in),
 				func() *Node {
 					return &Node{
 						Key:   key,
@@ -74,7 +74,7 @@ func Range(key string, low, high []byte) Operator {
 
 		ns.Append(
 			loadOrStoreNode(
-				nodeCacheKey{key, pos, uint(l), in, nil},
+				newNodeCacheKey(key, pos, uint(l), in),
 				func() *Node {
 					return &Node{
 						Key:   key,
@@ -103,7 +103,7 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 				for _, sn := range subns {
 					resns.Append(
 						loadOrStoreNode(
-							nodeCacheKey{key, pos, uint(len(sn.Value)), in, hashString([]byte(sn.Key))},
+							newNodeCacheKey(key, pos, uint(len(sn.Value)), in, sn),
 							func() *Node {
 								nn := &Node{
 									Key:   key,
@@ -170,7 +170,7 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 
 		resns.Append(
 			loadOrStoreNode(
-				nodeCacheKey{key: key, pos: pos},
+				newNodeCacheKey(key, pos, 0, in),
 				func() *Node {
 					return &Node{
 						Key:   key,
@@ -194,15 +194,11 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 				subns.Clear()
 				if err := op(in, n.Pos+uint(len(n.Value)), &subns); err == nil {
 					for _, sn := range subns {
+						ck := newNodeCacheKey(key, n.Pos, uint(len(n.Value)+len(sn.Value)), in, n.Children...)
+						ck.writeChildKeys(0, sn)
 						newns.Append(
 							loadOrStoreNode(
-								nodeCacheKey{
-									key,
-									n.Pos,
-									uint(len(n.Value) + len(sn.Value)),
-									in,
-									append(hashKeys(&n.Children), hashString([]byte(sn.Key))...),
-								},
+								ck,
 								func() *Node {
 									nn := &Node{
 										Key:   key,
@@ -288,7 +284,7 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 		if min == 0 {
 			resns.Append(
 				loadOrStoreNode(
-					nodeCacheKey{key: key, pos: pos},
+					newNodeCacheKey(key, pos, 0, in),
 					func() *Node {
 						return &Node{
 							Key:   key,
@@ -325,15 +321,11 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 				subns.Clear()
 				if err := op(in, n.Pos+uint(len(n.Value)), &subns); err == nil {
 					for _, sn := range subns {
+						ck := newNodeCacheKey(key, n.Pos, uint(len(n.Value)+len(sn.Value)), in, n.Children...)
+						ck.writeChildKeys(0, sn)
 						newns.Append(
 							loadOrStoreNode(
-								nodeCacheKey{
-									key,
-									n.Pos,
-									n.Pos + uint(len(n.Value)+len(sn.Value)),
-									in,
-									append(hashKeys(&n.Children), hashString([]byte(sn.Key))...),
-								},
+								ck,
 								func() *Node {
 									nn := &Node{
 										Key:   key,

@@ -2,9 +2,11 @@ package abnf
 
 import (
 	"bytes"
+	"encoding/binary"
+	"hash"
 	"hash/fnv"
-	"strconv"
 	"sync"
+	"unsafe"
 
 	lru "github.com/hashicorp/golang-lru/v2"
 )
@@ -101,39 +103,63 @@ func init() {
 }
 
 type nodeCacheKey struct {
-	key   string
-	pos   uint
-	len   uint
-	input []byte
-	child []byte
+	hash.Hash64
+	buf [8]byte
 }
 
-func (key *nodeCacheKey) hash() uint64 {
-	h := fnv.New64a()
-	h.Write([]byte(key.key))
-	h.Write([]byte(strconv.FormatUint(uint64(key.pos), 10)))
-	h.Write([]byte(strconv.FormatUint(uint64(key.len), 10)))
-	h.Write(key.input)
-	h.Write(key.child)
-	return h.Sum64()
+var nodeCacheKeyPool = sync.Pool{
+	New: func() any { return &nodeCacheKey{fnv.New64a(), [8]byte{}} },
 }
 
-func hashKeys(nn *Nodes) []byte {
-	h := fnv.New64a()
-	for _, n := range *nn {
-		h.Write([]byte(n.Key))
-		h.Write(hashKeys(&n.Children))
+func newNodeCacheKey(key string, pos uint, len uint, input []byte, ns ...*Node) *nodeCacheKey {
+	ck := nodeCacheKeyPool.Get().(*nodeCacheKey)
+	ck.writeBase(key, pos, len, input)
+	ck.writeChildKeys(0, ns...)
+	return ck
+}
+
+func (ck *nodeCacheKey) free() {
+	if ck == nil {
+		return
 	}
-	return h.Sum(nil)
+
+	ck.Reset()
+	nodeCacheKeyPool.Put(ck)
 }
 
-func hashString(s []byte) []byte {
-	h := fnv.New64a()
-	h.Write(s)
-	return h.Sum(nil)
+func (ck *nodeCacheKey) writeBase(key string, pos uint, len uint, input []byte) {
+	ck.Write(unsafeStringToBytes(key))
+
+	binary.BigEndian.PutUint64(ck.buf[:], uint64(pos))
+	ck.Write(ck.buf[:])
+
+	binary.BigEndian.PutUint64(ck.buf[:], uint64(len))
+	ck.Write(ck.buf[:])
+
+	ck.Write(input)
 }
 
-func loadNode(k nodeCacheKey) (*Node, bool) {
+func (ck *nodeCacheKey) writeChildKeys(depth uint, ns ...*Node) {
+	for _, n := range ns {
+		binary.BigEndian.PutUint64(ck.buf[:], uint64(depth))
+		ck.Write(ck.buf[:])
+		ck.Write(unsafeStringToBytes(n.Key))
+		ck.writeChildKeys(depth+1, n.Children...)
+	}
+}
+
+func (ck *nodeCacheKey) hash() uint64 { return ck.Sum64() }
+
+// unsafeStringToBytes converts string to []byte without allocation
+// WARNING: The returned byte slice must not be modified
+func unsafeStringToBytes(s string) []byte {
+	return *(*[]byte)(unsafe.Pointer(&struct {
+		string
+		int
+	}{s, len(s)}))
+}
+
+func loadNode(k *nodeCacheKey) (*Node, bool) {
 	n, ok := nodeCache.Get(k.hash())
 	if !ok {
 		return nil, false
@@ -141,11 +167,13 @@ func loadNode(k nodeCacheKey) (*Node, bool) {
 	return n, true
 }
 
-func storeNode(k nodeCacheKey, n *Node) {
+func storeNode(k *nodeCacheKey, n *Node) {
 	nodeCache.Add(k.hash(), n)
 }
 
-func loadOrStoreNode(k nodeCacheKey, newNode func() *Node) *Node {
+func loadOrStoreNode(k *nodeCacheKey, newNode func() *Node) *Node {
+	defer k.free()
+
 	if n, ok := loadNode(k); ok {
 		return n
 	}
