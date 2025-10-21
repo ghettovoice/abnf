@@ -5,4 +5,3 @@ inputs:
 package: abnf_core
 # output file path
 output: rules.go
-wrap_errs: true
