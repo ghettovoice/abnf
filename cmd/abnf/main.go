@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"braces.dev/errtrace"
 	"github.com/urfave/cli/v3"
 
 	"github.com/ghettovoice/abnf"
@@ -85,7 +84,7 @@ const defaultConfPath = "abnf.yml"
 func configAction(_ context.Context, cmd *cli.Command) error {
 	wd, err := os.Getwd()
 	if err != nil {
-		return cli.Exit(errtrace.Wrap(fmt.Errorf("get working directory: %w", err)), 1)
+		return cli.Exit(fmt.Errorf("get working directory: %w", err), 1) //errtrace:skip
 	}
 
 	confPath := defaultConfPath
@@ -101,19 +100,19 @@ func configAction(_ context.Context, cmd *cli.Command) error {
 			v := "no"
 			fmt.Printf("File %s is already exist. Overwrite? (y, N)\n", confPath)
 			if _, err := fmt.Scanln(&v); err != nil {
-				return cli.Exit(errtrace.Wrap(fmt.Errorf("read user input: %w", err)), 1)
+				return cli.Exit(fmt.Errorf("read user input: %w", err), 1) //errtrace:skip
 			}
 
 			switch strings.ToLower(v) {
 			case "0", "n", "no":
-				return cli.Exit(errtrace.Wrap(fmt.Errorf("config generation canceled")), 1)
+				return cli.Exit(fmt.Errorf("config generation canceled"), 1) //errtrace:skip
 			}
 		}
 	}
 
 	fd, err := os.OpenFile(confPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return cli.Exit(errtrace.Wrap(fmt.Errorf("open output file: %w", err)), 1)
+		return cli.Exit(fmt.Errorf("open output file: %w", err), 1) //errtrace:skip
 	}
 	defer fd.Close()
 
@@ -133,7 +132,7 @@ external:
 `,
 	))
 	if err != nil {
-		return cli.Exit(errtrace.Wrap(fmt.Errorf("write config file: %w", err)), 1)
+		return cli.Exit(fmt.Errorf("write config file: %w", err), 1) //errtrace:skip
 	}
 
 	fmt.Printf("config written to file %s\n", confPath)
@@ -144,7 +143,7 @@ external:
 func generateAction(_ context.Context, cmd *cli.Command) error {
 	wd, err := os.Getwd()
 	if err != nil {
-		return cli.Exit(errtrace.Wrap(fmt.Errorf("get working directory: %w", err)), 1)
+		return cli.Exit(fmt.Errorf("get working directory: %w", err), 1) //errtrace:skip
 	}
 
 	// read config
@@ -156,12 +155,12 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 
 	buf, err := os.ReadFile(confPath)
 	if err != nil {
-		return cli.Exit(errtrace.Wrap(fmt.Errorf("read config file: %w", err)), 1)
+		return cli.Exit(fmt.Errorf("read config file: %w", err), 1) //errtrace:skip
 	}
 
 	cfg, err := parseConfig(buf)
 	if err != nil {
-		return cli.Exit(errtrace.Wrap(err), 1)
+		return cli.Exit(err, 1) //errtrace:skip
 	}
 
 	fmt.Printf("config file %s loaded\n", confPath)
@@ -170,7 +169,6 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 	var errs []error
 	g := abnf_gen.CodeGenerator{
 		PackageName: cfg.Package,
-		WrapErrors:  cfg.WrapErrs,
 	}
 	if len(cfg.External) > 0 {
 		g.External = make(map[string]abnf_gen.ExternalRule)
@@ -193,7 +191,7 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 		}
 	}
 	if len(errs) > 0 {
-		return cli.Exit(errtrace.Wrap(errors.Join(errs...)), 1)
+		return cli.Exit(errors.Join(errs...), 1) //errtrace:skip
 	}
 
 	// read, parse input ABNF files
@@ -217,7 +215,7 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 		fmt.Printf("ABNF file %s parsed\n", in)
 	}
 	if len(errs) > 0 {
-		return cli.Exit(errtrace.Wrap(errors.Join(errs...)), 1)
+		return cli.Exit(errors.Join(errs...), 1) //errtrace:skip
 	}
 
 	// write Go sources to output file
@@ -232,24 +230,24 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 			v := "no"
 			fmt.Printf("File %s is already exist. Overwrite? (y, N)\n", outPath)
 			if _, err := fmt.Scanln(&v); err != nil {
-				return cli.Exit(errtrace.Wrap(fmt.Errorf("read user input: %w", err)), 1)
+				return cli.Exit(fmt.Errorf("read user input: %w", err), 1) //errtrace:skip
 			}
 
 			switch strings.ToLower(v) {
 			case "0", "n", "no":
-				return cli.Exit(errtrace.Wrap(fmt.Errorf("code generation canceled")), 1)
+				return cli.Exit(fmt.Errorf("code generation canceled"), 1) //errtrace:skip
 			}
 		}
 	}
 
 	fd, err := os.OpenFile(outPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return cli.Exit(errtrace.Wrap(fmt.Errorf("open output file: %w", err)), 1)
+		return cli.Exit(fmt.Errorf("open output file: %w", err), 1) //errtrace:skip
 	}
 	defer fd.Close()
 
 	if _, err := g.WriteTo(fd); err != nil {
-		return cli.Exit(errtrace.Wrap(fmt.Errorf("write generated code to file %s: %w", outPath, err)), 1)
+		return cli.Exit(fmt.Errorf("write generated code to file %s: %w", outPath, err), 1) //errtrace:skip
 	}
 
 	fmt.Printf("generated code written to file %s\n", outPath)

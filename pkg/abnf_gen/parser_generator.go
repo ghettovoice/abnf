@@ -46,7 +46,7 @@ func (g *ParserGenerator) Rules() map[string]abnf.Rule {
 		}
 		for n, op := range oprts {
 			g.rules[n] = func(in []byte, ns *abnf.Nodes) error {
-				return op(in, 0, ns)
+				return op(in, 0, ns) //errtrace:skip
 			}
 		}
 	}
@@ -124,7 +124,7 @@ func (op ruleNameOperator) buildOprt(g *ParserGenerator) abnf.Operator {
 		if oprt, ok = g.oprts[op.key()]; !ok {
 			panic(fmt.Errorf("unknown ABNF rule '%s'", op.key()))
 		}
-		return oprt(in, pos, ns)
+		return oprt(in, pos, ns) //errtrace:skip
 	}
 }
 

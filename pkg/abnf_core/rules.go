@@ -5,7 +5,6 @@ package abnf_core
 import (
 	"sync"
 
-	"braces.dev/errtrace"
 	"github.com/ghettovoice/abnf"
 )
 
@@ -113,7 +112,7 @@ func (desc *OperatorsDescr) ALPHA(in []byte, pos uint, ns *abnf.Nodes) error {
 			abnf.Range("%x61-7A", []byte{97}, []byte{122}),
 		)
 	})
-	return errtrace.Wrap(desc.alpha(in, pos, ns))
+	return desc.alpha(in, pos, ns) //errtrace:skip
 }
 
 // BIT operator: BIT = "0" / "1"
@@ -125,7 +124,7 @@ func (desc *OperatorsDescr) BIT(in []byte, pos uint, ns *abnf.Nodes) error {
 			abnf.Literal("\"1\"", []byte{49}),
 		)
 	})
-	return errtrace.Wrap(desc.bit(in, pos, ns))
+	return desc.bit(in, pos, ns) //errtrace:skip
 }
 
 // CHAR operator: CHAR = %x01-7F
@@ -133,7 +132,7 @@ func (desc *OperatorsDescr) CHAR(in []byte, pos uint, ns *abnf.Nodes) error {
 	desc.charOnce.Do(func() {
 		desc.char = abnf.Range("CHAR", []byte{1}, []byte{127})
 	})
-	return errtrace.Wrap(desc.char(in, pos, ns))
+	return desc.char(in, pos, ns) //errtrace:skip
 }
 
 // CR operator: CR = %x0D
@@ -141,7 +140,7 @@ func (desc *OperatorsDescr) CR(in []byte, pos uint, ns *abnf.Nodes) error {
 	desc.crOnce.Do(func() {
 		desc.cr = abnf.Literal("CR", []byte{13})
 	})
-	return errtrace.Wrap(desc.cr(in, pos, ns))
+	return desc.cr(in, pos, ns) //errtrace:skip
 }
 
 // CRLF operator: CRLF = CR LF / LF
@@ -157,7 +156,7 @@ func (desc *OperatorsDescr) CRLF(in []byte, pos uint, ns *abnf.Nodes) error {
 			desc.LF,
 		)
 	})
-	return errtrace.Wrap(desc.crlf(in, pos, ns))
+	return desc.crlf(in, pos, ns) //errtrace:skip
 }
 
 // CTL operator: CTL = %x00-1F / %x7F
@@ -169,7 +168,7 @@ func (desc *OperatorsDescr) CTL(in []byte, pos uint, ns *abnf.Nodes) error {
 			abnf.Literal("%x7F", []byte{127}),
 		)
 	})
-	return errtrace.Wrap(desc.ctl(in, pos, ns))
+	return desc.ctl(in, pos, ns) //errtrace:skip
 }
 
 // DIGIT operator: DIGIT = %x30-39
@@ -177,7 +176,7 @@ func (desc *OperatorsDescr) DIGIT(in []byte, pos uint, ns *abnf.Nodes) error {
 	desc.digitOnce.Do(func() {
 		desc.digit = abnf.Range("DIGIT", []byte{48}, []byte{57})
 	})
-	return errtrace.Wrap(desc.digit(in, pos, ns))
+	return desc.digit(in, pos, ns) //errtrace:skip
 }
 
 // DQUOTE operator: DQUOTE = %x22
@@ -185,7 +184,7 @@ func (desc *OperatorsDescr) DQUOTE(in []byte, pos uint, ns *abnf.Nodes) error {
 	desc.dquoteOnce.Do(func() {
 		desc.dquote = abnf.Literal("DQUOTE", []byte{34})
 	})
-	return errtrace.Wrap(desc.dquote(in, pos, ns))
+	return desc.dquote(in, pos, ns) //errtrace:skip
 }
 
 // HEXDIG operator: HEXDIG = DIGIT / "A" / "B" / "C" / "D" / "E" / "F"
@@ -202,7 +201,7 @@ func (desc *OperatorsDescr) HEXDIG(in []byte, pos uint, ns *abnf.Nodes) error {
 			abnf.Literal("\"F\"", []byte{70}),
 		)
 	})
-	return errtrace.Wrap(desc.hexdig(in, pos, ns))
+	return desc.hexdig(in, pos, ns) //errtrace:skip
 }
 
 // HTAB operator: HTAB = %x09
@@ -210,7 +209,7 @@ func (desc *OperatorsDescr) HTAB(in []byte, pos uint, ns *abnf.Nodes) error {
 	desc.htabOnce.Do(func() {
 		desc.htab = abnf.Literal("HTAB", []byte{9})
 	})
-	return errtrace.Wrap(desc.htab(in, pos, ns))
+	return desc.htab(in, pos, ns) //errtrace:skip
 }
 
 // LF operator: LF = %x0A
@@ -218,7 +217,7 @@ func (desc *OperatorsDescr) LF(in []byte, pos uint, ns *abnf.Nodes) error {
 	desc.lfOnce.Do(func() {
 		desc.lf = abnf.Literal("LF", []byte{10})
 	})
-	return errtrace.Wrap(desc.lf(in, pos, ns))
+	return desc.lf(in, pos, ns) //errtrace:skip
 }
 
 // LWSP operator: LWSP = *(WSP / CRLF WSP)
@@ -237,7 +236,7 @@ func (desc *OperatorsDescr) LWSP(in []byte, pos uint, ns *abnf.Nodes) error {
 			),
 		)
 	})
-	return errtrace.Wrap(desc.lwsp(in, pos, ns))
+	return desc.lwsp(in, pos, ns) //errtrace:skip
 }
 
 // OCTET operator: OCTET = %x00-FF
@@ -245,7 +244,7 @@ func (desc *OperatorsDescr) OCTET(in []byte, pos uint, ns *abnf.Nodes) error {
 	desc.octetOnce.Do(func() {
 		desc.octet = abnf.Range("OCTET", []byte{0}, []byte{255})
 	})
-	return errtrace.Wrap(desc.octet(in, pos, ns))
+	return desc.octet(in, pos, ns) //errtrace:skip
 }
 
 // SP operator: SP = %x20
@@ -253,7 +252,7 @@ func (desc *OperatorsDescr) SP(in []byte, pos uint, ns *abnf.Nodes) error {
 	desc.spOnce.Do(func() {
 		desc.sp = abnf.Literal("SP", []byte{32})
 	})
-	return errtrace.Wrap(desc.sp(in, pos, ns))
+	return desc.sp(in, pos, ns) //errtrace:skip
 }
 
 // VCHAR operator: VCHAR = %x21-7E
@@ -261,7 +260,7 @@ func (desc *OperatorsDescr) VCHAR(in []byte, pos uint, ns *abnf.Nodes) error {
 	desc.vcharOnce.Do(func() {
 		desc.vchar = abnf.Range("VCHAR", []byte{33}, []byte{126})
 	})
-	return errtrace.Wrap(desc.vchar(in, pos, ns))
+	return desc.vchar(in, pos, ns) //errtrace:skip
 }
 
 // WSP operator: WSP = SP / HTAB
@@ -273,7 +272,7 @@ func (desc *OperatorsDescr) WSP(in []byte, pos uint, ns *abnf.Nodes) error {
 			desc.HTAB,
 		)
 	})
-	return errtrace.Wrap(desc.wsp(in, pos, ns))
+	return desc.wsp(in, pos, ns) //errtrace:skip
 }
 
 // RulesDescr defines rules descriptor that provides rules as methods.
@@ -281,80 +280,80 @@ type RulesDescr struct{}
 
 // ALPHA rule: ALPHA = %x41-5A / %x61-7A
 func (*RulesDescr) ALPHA(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.ALPHA(in, 0, ns))
+	return oprsDescr.ALPHA(in, 0, ns) //errtrace:skip
 }
 
 // BIT rule: BIT = "0" / "1"
 func (*RulesDescr) BIT(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.BIT(in, 0, ns))
+	return oprsDescr.BIT(in, 0, ns) //errtrace:skip
 }
 
 // CHAR rule: CHAR = %x01-7F
 func (*RulesDescr) CHAR(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.CHAR(in, 0, ns))
+	return oprsDescr.CHAR(in, 0, ns) //errtrace:skip
 }
 
 // CR rule: CR = %x0D
 func (*RulesDescr) CR(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.CR(in, 0, ns))
+	return oprsDescr.CR(in, 0, ns) //errtrace:skip
 }
 
 // CRLF rule: CRLF = CR LF / LF
 func (*RulesDescr) CRLF(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.CRLF(in, 0, ns))
+	return oprsDescr.CRLF(in, 0, ns) //errtrace:skip
 }
 
 // CTL rule: CTL = %x00-1F / %x7F
 func (*RulesDescr) CTL(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.CTL(in, 0, ns))
+	return oprsDescr.CTL(in, 0, ns) //errtrace:skip
 }
 
 // DIGIT rule: DIGIT = %x30-39
 func (*RulesDescr) DIGIT(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.DIGIT(in, 0, ns))
+	return oprsDescr.DIGIT(in, 0, ns) //errtrace:skip
 }
 
 // DQUOTE rule: DQUOTE = %x22
 func (*RulesDescr) DQUOTE(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.DQUOTE(in, 0, ns))
+	return oprsDescr.DQUOTE(in, 0, ns) //errtrace:skip
 }
 
 // HEXDIG rule: HEXDIG = DIGIT / "A" / "B" / "C" / "D" / "E" / "F"
 func (*RulesDescr) HEXDIG(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.HEXDIG(in, 0, ns))
+	return oprsDescr.HEXDIG(in, 0, ns) //errtrace:skip
 }
 
 // HTAB rule: HTAB = %x09
 func (*RulesDescr) HTAB(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.HTAB(in, 0, ns))
+	return oprsDescr.HTAB(in, 0, ns) //errtrace:skip
 }
 
 // LF rule: LF = %x0A
 func (*RulesDescr) LF(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.LF(in, 0, ns))
+	return oprsDescr.LF(in, 0, ns) //errtrace:skip
 }
 
 // LWSP rule: LWSP = *(WSP / CRLF WSP)
 func (*RulesDescr) LWSP(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.LWSP(in, 0, ns))
+	return oprsDescr.LWSP(in, 0, ns) //errtrace:skip
 }
 
 // OCTET rule: OCTET = %x00-FF
 func (*RulesDescr) OCTET(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.OCTET(in, 0, ns))
+	return oprsDescr.OCTET(in, 0, ns) //errtrace:skip
 }
 
 // SP rule: SP = %x20
 func (*RulesDescr) SP(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.SP(in, 0, ns))
+	return oprsDescr.SP(in, 0, ns) //errtrace:skip
 }
 
 // VCHAR rule: VCHAR = %x21-7E
 func (*RulesDescr) VCHAR(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.VCHAR(in, 0, ns))
+	return oprsDescr.VCHAR(in, 0, ns) //errtrace:skip
 }
 
 // WSP rule: WSP = SP / HTAB
 func (*RulesDescr) WSP(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.WSP(in, 0, ns))
+	return oprsDescr.WSP(in, 0, ns) //errtrace:skip
 }

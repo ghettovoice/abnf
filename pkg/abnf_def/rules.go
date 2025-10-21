@@ -5,7 +5,6 @@ package abnf_def
 import (
 	"sync"
 
-	"braces.dev/errtrace"
 	"github.com/ghettovoice/abnf"
 	"github.com/ghettovoice/abnf/pkg/abnf_core"
 )
@@ -161,7 +160,7 @@ func (desc *OperatorsDescr) Alternation(in []byte, pos uint, ns *abnf.Nodes) err
 			),
 		)
 	})
-	return errtrace.Wrap(desc.alternation(in, pos, ns))
+	return desc.alternation(in, pos, ns) //errtrace:skip
 }
 
 // BinVal operator: bin-val = "b" 1*BIT [ 1*("." 1*BIT) / ("-" 1*BIT) ]
@@ -201,7 +200,7 @@ func (desc *OperatorsDescr) BinVal(in []byte, pos uint, ns *abnf.Nodes) error {
 			),
 		)
 	})
-	return errtrace.Wrap(desc.binVal(in, pos, ns))
+	return desc.binVal(in, pos, ns) //errtrace:skip
 }
 
 // CNl operator: c-nl = comment / CRLF
@@ -213,7 +212,7 @@ func (desc *OperatorsDescr) CNl(in []byte, pos uint, ns *abnf.Nodes) error {
 			abnf_core.Operators().CRLF,
 		)
 	})
-	return errtrace.Wrap(desc.cNl(in, pos, ns))
+	return desc.cNl(in, pos, ns) //errtrace:skip
 }
 
 // CWsp operator: c-wsp = WSP / (c-nl WSP)
@@ -229,7 +228,7 @@ func (desc *OperatorsDescr) CWsp(in []byte, pos uint, ns *abnf.Nodes) error {
 			),
 		)
 	})
-	return errtrace.Wrap(desc.cWsp(in, pos, ns))
+	return desc.cWsp(in, pos, ns) //errtrace:skip
 }
 
 // CaseInsensitiveString operator: case-insensitive-string = [ "%i" ] quoted-string
@@ -244,7 +243,7 @@ func (desc *OperatorsDescr) CaseInsensitiveString(in []byte, pos uint, ns *abnf.
 			desc.QuotedString,
 		)
 	})
-	return errtrace.Wrap(desc.caseInsensitiveString(in, pos, ns))
+	return desc.caseInsensitiveString(in, pos, ns) //errtrace:skip
 }
 
 // CaseSensitiveString operator: case-sensitive-string = "%s" quoted-string
@@ -256,7 +255,7 @@ func (desc *OperatorsDescr) CaseSensitiveString(in []byte, pos uint, ns *abnf.No
 			desc.QuotedString,
 		)
 	})
-	return errtrace.Wrap(desc.caseSensitiveString(in, pos, ns))
+	return desc.caseSensitiveString(in, pos, ns) //errtrace:skip
 }
 
 // CharVal operator: char-val = case-insensitive-string / case-sensitive-string
@@ -268,7 +267,7 @@ func (desc *OperatorsDescr) CharVal(in []byte, pos uint, ns *abnf.Nodes) error {
 			desc.CaseSensitiveString,
 		)
 	})
-	return errtrace.Wrap(desc.charVal(in, pos, ns))
+	return desc.charVal(in, pos, ns) //errtrace:skip
 }
 
 // Comment operator: comment = ";" *(WSP / VCHAR) CRLF
@@ -288,7 +287,7 @@ func (desc *OperatorsDescr) Comment(in []byte, pos uint, ns *abnf.Nodes) error {
 			abnf_core.Operators().CRLF,
 		)
 	})
-	return errtrace.Wrap(desc.comment(in, pos, ns))
+	return desc.comment(in, pos, ns) //errtrace:skip
 }
 
 // Concatenation operator: concatenation = repetition *(1*c-wsp repetition)
@@ -310,7 +309,7 @@ func (desc *OperatorsDescr) Concatenation(in []byte, pos uint, ns *abnf.Nodes) e
 			),
 		)
 	})
-	return errtrace.Wrap(desc.concatenation(in, pos, ns))
+	return desc.concatenation(in, pos, ns) //errtrace:skip
 }
 
 // DecVal operator: dec-val = "d" 1*DIGIT [ 1*("." 1*DIGIT) / ("-" 1*DIGIT) ]
@@ -350,7 +349,7 @@ func (desc *OperatorsDescr) DecVal(in []byte, pos uint, ns *abnf.Nodes) error {
 			),
 		)
 	})
-	return errtrace.Wrap(desc.decVal(in, pos, ns))
+	return desc.decVal(in, pos, ns) //errtrace:skip
 }
 
 // DefinedAs operator: defined-as = *c-wsp ("=" / "=/") *c-wsp
@@ -373,7 +372,7 @@ func (desc *OperatorsDescr) DefinedAs(in []byte, pos uint, ns *abnf.Nodes) error
 			),
 		)
 	})
-	return errtrace.Wrap(desc.definedAs(in, pos, ns))
+	return desc.definedAs(in, pos, ns) //errtrace:skip
 }
 
 // Element operator: element = rulename / group / option / char-val / num-val / prose-val
@@ -389,7 +388,7 @@ func (desc *OperatorsDescr) Element(in []byte, pos uint, ns *abnf.Nodes) error {
 			desc.ProseVal,
 		)
 	})
-	return errtrace.Wrap(desc.element(in, pos, ns))
+	return desc.element(in, pos, ns) //errtrace:skip
 }
 
 // Elements operator: elements = alternation *WSP
@@ -404,7 +403,7 @@ func (desc *OperatorsDescr) Elements(in []byte, pos uint, ns *abnf.Nodes) error 
 			),
 		)
 	})
-	return errtrace.Wrap(desc.elements(in, pos, ns))
+	return desc.elements(in, pos, ns) //errtrace:skip
 }
 
 // Group operator: group = "(" *c-wsp alternation *c-wsp ")"
@@ -425,7 +424,7 @@ func (desc *OperatorsDescr) Group(in []byte, pos uint, ns *abnf.Nodes) error {
 			abnf.Literal("\")\"", []byte{41}),
 		)
 	})
-	return errtrace.Wrap(desc.group(in, pos, ns))
+	return desc.group(in, pos, ns) //errtrace:skip
 }
 
 // HexVal operator: hex-val = "x" 1*HEXDIG [ 1*("." 1*HEXDIG) / ("-" 1*HEXDIG) ]
@@ -465,7 +464,7 @@ func (desc *OperatorsDescr) HexVal(in []byte, pos uint, ns *abnf.Nodes) error {
 			),
 		)
 	})
-	return errtrace.Wrap(desc.hexVal(in, pos, ns))
+	return desc.hexVal(in, pos, ns) //errtrace:skip
 }
 
 // NumVal operator: num-val = "%" (bin-val / dec-val / hex-val)
@@ -482,7 +481,7 @@ func (desc *OperatorsDescr) NumVal(in []byte, pos uint, ns *abnf.Nodes) error {
 			),
 		)
 	})
-	return errtrace.Wrap(desc.numVal(in, pos, ns))
+	return desc.numVal(in, pos, ns) //errtrace:skip
 }
 
 // Option operator: option = "[" *c-wsp alternation *c-wsp "]"
@@ -503,7 +502,7 @@ func (desc *OperatorsDescr) Option(in []byte, pos uint, ns *abnf.Nodes) error {
 			abnf.Literal("\"]\"", []byte{93}),
 		)
 	})
-	return errtrace.Wrap(desc.option(in, pos, ns))
+	return desc.option(in, pos, ns) //errtrace:skip
 }
 
 // ProseVal operator: prose-val = "<" *(%x20-3D / %x3F-7E) ">"
@@ -523,7 +522,7 @@ func (desc *OperatorsDescr) ProseVal(in []byte, pos uint, ns *abnf.Nodes) error 
 			abnf.Literal("\">\"", []byte{62}),
 		)
 	})
-	return errtrace.Wrap(desc.proseVal(in, pos, ns))
+	return desc.proseVal(in, pos, ns) //errtrace:skip
 }
 
 // QuotedString operator: quoted-string = DQUOTE *(%x20-21 / %x23-7E) DQUOTE
@@ -543,7 +542,7 @@ func (desc *OperatorsDescr) QuotedString(in []byte, pos uint, ns *abnf.Nodes) er
 			abnf_core.Operators().DQUOTE,
 		)
 	})
-	return errtrace.Wrap(desc.quotedString(in, pos, ns))
+	return desc.quotedString(in, pos, ns) //errtrace:skip
 }
 
 // Repeat operator: repeat = 1*DIGIT / (*DIGIT "*" *DIGIT)
@@ -569,7 +568,7 @@ func (desc *OperatorsDescr) Repeat(in []byte, pos uint, ns *abnf.Nodes) error {
 			),
 		)
 	})
-	return errtrace.Wrap(desc.repeat(in, pos, ns))
+	return desc.repeat(in, pos, ns) //errtrace:skip
 }
 
 // Repetition operator: repetition = [repeat] element
@@ -584,7 +583,7 @@ func (desc *OperatorsDescr) Repetition(in []byte, pos uint, ns *abnf.Nodes) erro
 			desc.Element,
 		)
 	})
-	return errtrace.Wrap(desc.repetition(in, pos, ns))
+	return desc.repetition(in, pos, ns) //errtrace:skip
 }
 
 // Rule operator: rule = rulename defined-as elements c-nl
@@ -598,7 +597,7 @@ func (desc *OperatorsDescr) Rule(in []byte, pos uint, ns *abnf.Nodes) error {
 			desc.CNl,
 		)
 	})
-	return errtrace.Wrap(desc.rule(in, pos, ns))
+	return desc.rule(in, pos, ns) //errtrace:skip
 }
 
 // Rulelist operator: rulelist = 1*( rule / (*WSP c-nl) )
@@ -620,7 +619,7 @@ func (desc *OperatorsDescr) Rulelist(in []byte, pos uint, ns *abnf.Nodes) error 
 			),
 		)
 	})
-	return errtrace.Wrap(desc.rulelist(in, pos, ns))
+	return desc.rulelist(in, pos, ns) //errtrace:skip
 }
 
 // Rulename operator: rulename = ALPHA *(ALPHA / DIGIT / "-")
@@ -640,7 +639,7 @@ func (desc *OperatorsDescr) Rulename(in []byte, pos uint, ns *abnf.Nodes) error 
 			),
 		)
 	})
-	return errtrace.Wrap(desc.rulename(in, pos, ns))
+	return desc.rulename(in, pos, ns) //errtrace:skip
 }
 
 // RulesDescr defines rules descriptor that provides rules as methods.
@@ -648,120 +647,120 @@ type RulesDescr struct{}
 
 // Alternation rule: alternation = concatenation *(*c-wsp "/" *c-wsp concatenation)
 func (*RulesDescr) Alternation(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.Alternation(in, 0, ns))
+	return oprsDescr.Alternation(in, 0, ns) //errtrace:skip
 }
 
 // BinVal rule: bin-val = "b" 1*BIT [ 1*("." 1*BIT) / ("-" 1*BIT) ]
 func (*RulesDescr) BinVal(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.BinVal(in, 0, ns))
+	return oprsDescr.BinVal(in, 0, ns) //errtrace:skip
 }
 
 // CNl rule: c-nl = comment / CRLF
 func (*RulesDescr) CNl(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.CNl(in, 0, ns))
+	return oprsDescr.CNl(in, 0, ns) //errtrace:skip
 }
 
 // CWsp rule: c-wsp = WSP / (c-nl WSP)
 func (*RulesDescr) CWsp(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.CWsp(in, 0, ns))
+	return oprsDescr.CWsp(in, 0, ns) //errtrace:skip
 }
 
 // CaseInsensitiveString rule: case-insensitive-string = [ "%i" ] quoted-string
 func (*RulesDescr) CaseInsensitiveString(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.CaseInsensitiveString(in, 0, ns))
+	return oprsDescr.CaseInsensitiveString(in, 0, ns) //errtrace:skip
 }
 
 // CaseSensitiveString rule: case-sensitive-string = "%s" quoted-string
 func (*RulesDescr) CaseSensitiveString(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.CaseSensitiveString(in, 0, ns))
+	return oprsDescr.CaseSensitiveString(in, 0, ns) //errtrace:skip
 }
 
 // CharVal rule: char-val = case-insensitive-string / case-sensitive-string
 func (*RulesDescr) CharVal(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.CharVal(in, 0, ns))
+	return oprsDescr.CharVal(in, 0, ns) //errtrace:skip
 }
 
 // Comment rule: comment = ";" *(WSP / VCHAR) CRLF
 func (*RulesDescr) Comment(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.Comment(in, 0, ns))
+	return oprsDescr.Comment(in, 0, ns) //errtrace:skip
 }
 
 // Concatenation rule: concatenation = repetition *(1*c-wsp repetition)
 func (*RulesDescr) Concatenation(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.Concatenation(in, 0, ns))
+	return oprsDescr.Concatenation(in, 0, ns) //errtrace:skip
 }
 
 // DecVal rule: dec-val = "d" 1*DIGIT [ 1*("." 1*DIGIT) / ("-" 1*DIGIT) ]
 func (*RulesDescr) DecVal(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.DecVal(in, 0, ns))
+	return oprsDescr.DecVal(in, 0, ns) //errtrace:skip
 }
 
 // DefinedAs rule: defined-as = *c-wsp ("=" / "=/") *c-wsp
 func (*RulesDescr) DefinedAs(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.DefinedAs(in, 0, ns))
+	return oprsDescr.DefinedAs(in, 0, ns) //errtrace:skip
 }
 
 // Element rule: element = rulename / group / option / char-val / num-val / prose-val
 func (*RulesDescr) Element(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.Element(in, 0, ns))
+	return oprsDescr.Element(in, 0, ns) //errtrace:skip
 }
 
 // Elements rule: elements = alternation *WSP
 func (*RulesDescr) Elements(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.Elements(in, 0, ns))
+	return oprsDescr.Elements(in, 0, ns) //errtrace:skip
 }
 
 // Group rule: group = "(" *c-wsp alternation *c-wsp ")"
 func (*RulesDescr) Group(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.Group(in, 0, ns))
+	return oprsDescr.Group(in, 0, ns) //errtrace:skip
 }
 
 // HexVal rule: hex-val = "x" 1*HEXDIG [ 1*("." 1*HEXDIG) / ("-" 1*HEXDIG) ]
 func (*RulesDescr) HexVal(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.HexVal(in, 0, ns))
+	return oprsDescr.HexVal(in, 0, ns) //errtrace:skip
 }
 
 // NumVal rule: num-val = "%" (bin-val / dec-val / hex-val)
 func (*RulesDescr) NumVal(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.NumVal(in, 0, ns))
+	return oprsDescr.NumVal(in, 0, ns) //errtrace:skip
 }
 
 // Option rule: option = "[" *c-wsp alternation *c-wsp "]"
 func (*RulesDescr) Option(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.Option(in, 0, ns))
+	return oprsDescr.Option(in, 0, ns) //errtrace:skip
 }
 
 // ProseVal rule: prose-val = "<" *(%x20-3D / %x3F-7E) ">"
 func (*RulesDescr) ProseVal(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.ProseVal(in, 0, ns))
+	return oprsDescr.ProseVal(in, 0, ns) //errtrace:skip
 }
 
 // QuotedString rule: quoted-string = DQUOTE *(%x20-21 / %x23-7E) DQUOTE
 func (*RulesDescr) QuotedString(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.QuotedString(in, 0, ns))
+	return oprsDescr.QuotedString(in, 0, ns) //errtrace:skip
 }
 
 // Repeat rule: repeat = 1*DIGIT / (*DIGIT "*" *DIGIT)
 func (*RulesDescr) Repeat(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.Repeat(in, 0, ns))
+	return oprsDescr.Repeat(in, 0, ns) //errtrace:skip
 }
 
 // Repetition rule: repetition = [repeat] element
 func (*RulesDescr) Repetition(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.Repetition(in, 0, ns))
+	return oprsDescr.Repetition(in, 0, ns) //errtrace:skip
 }
 
 // Rule rule: rule = rulename defined-as elements c-nl
 func (*RulesDescr) Rule(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.Rule(in, 0, ns))
+	return oprsDescr.Rule(in, 0, ns) //errtrace:skip
 }
 
 // Rulelist rule: rulelist = 1*( rule / (*WSP c-nl) )
 func (*RulesDescr) Rulelist(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.Rulelist(in, 0, ns))
+	return oprsDescr.Rulelist(in, 0, ns) //errtrace:skip
 }
 
 // Rulename rule: rulename = ALPHA *(ALPHA / DIGIT / "-")
 func (*RulesDescr) Rulename(in []byte, ns *abnf.Nodes) error {
-	return errtrace.Wrap(oprsDescr.Rulename(in, 0, ns))
+	return oprsDescr.Rulename(in, 0, ns) //errtrace:skip
 }

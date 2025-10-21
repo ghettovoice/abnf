@@ -12,13 +12,13 @@ type Operator = func(in []byte, pos uint, ns *Nodes) error
 func literal(key string, want []byte, ci bool) Operator {
 	return func(in []byte, pos uint, ns *Nodes) error {
 		if len(in[pos:]) < len(want) {
-			return operError{key, pos, ErrNotMatched}
+			return operError{key, pos, ErrNotMatched} //errtrace:skip
 		}
 
 		got := in[pos : int(pos)+len(want)]
 		if !bytes.Equal(got, want) {
 			if !ci || !bytes.Equal(toLower(want), toLower(got)) {
-				return operError{key, pos, ErrNotMatched}
+				return operError{key, pos, ErrNotMatched} //errtrace:skip
 			}
 		}
 
@@ -55,7 +55,7 @@ func LiteralCS(key string, val []byte) Operator {
 func Range(key string, low, high []byte) Operator {
 	return func(in []byte, pos uint, ns *Nodes) error {
 		if len(in[pos:]) < len(low) || bytes.Compare(in[pos:int(pos)+len(low)], low) < 0 {
-			return operError{key, pos, ErrNotMatched}
+			return operError{key, pos, ErrNotMatched} //errtrace:skip
 		}
 
 		var l int
@@ -69,7 +69,7 @@ func Range(key string, low, high []byte) Operator {
 		}
 
 		if l == 0 {
-			return operError{key, pos, ErrNotMatched}
+			return operError{key, pos, ErrNotMatched} //errtrace:skip
 		}
 
 		ns.Append(
@@ -143,7 +143,7 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 		}
 
 		if len(errs) > 0 {
-			return &operError{key, pos, multiError(errs)}
+			return operError{key, pos, multiError(errs)} //errtrace:skip
 		}
 		errs.free()
 		return nil
@@ -246,7 +246,7 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 		}
 
 		if len(errs) > 0 {
-			return &operError{key, pos, multiError(errs)}
+			return operError{key, pos, multiError(errs)} //errtrace:skip
 		}
 		errs.free()
 		return nil
@@ -298,7 +298,7 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 			)
 		} else {
 			if err := minOp(in, pos, &resns); err != nil {
-				return &operError{key, pos, err}
+				return operError{key, pos, err} //errtrace:skip
 			}
 		}
 
@@ -366,7 +366,7 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 		}
 
 		if len(errs) > 0 {
-			return &operError{key, pos, multiError(errs)}
+			return operError{key, pos, multiError(errs)} //errtrace:skip
 		}
 		errs.free()
 		return nil

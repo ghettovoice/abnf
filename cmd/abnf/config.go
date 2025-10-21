@@ -11,7 +11,6 @@ type config struct {
 	Inputs   []string `yaml:"inputs"`
 	Package  string   `yaml:"package"`
 	Output   string   `yaml:"output"`
-	WrapErrs bool     `yaml:"wrap_errs"`
 	External []struct {
 		Path  string   `yaml:"path"`
 		Name  string   `yaml:"name"`
