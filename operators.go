@@ -95,7 +95,7 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 		subns := NewNodes()
 		defer subns.Free()
 
-		errs := make([]error, 0, len(ops)+1)
+		errs := newMultiErr(uint(len(ops) + 1))
 
 		runOp := func(op Operator) bool {
 			subns.Clear()
@@ -139,12 +139,13 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 				sort.Sort(nodeSorter(resns))
 			}
 			ns.Append(resns...)
-			errs = errs[:0]
+			errs.clear()
 		}
 
 		if len(errs) > 0 {
 			return &operError{key, pos, multiError(errs)}
 		}
+		errs.free()
 		return nil
 	}
 }
@@ -186,7 +187,7 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 		subns := NewNodes()
 		defer subns.Free()
 
-		errs := make([]error, 0, len(ops)+1)
+		errs := newMultiErr(uint(len(ops) + 1))
 
 		runOp := func(op Operator) bool {
 			newns.Clear()
@@ -219,7 +220,7 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 			if len(newns) > 0 {
 				resns.Clear()
 				resns.Append(newns...)
-				errs = errs[:0]
+				errs.clear()
 			} else {
 				resns.Clear()
 				return false
@@ -241,12 +242,13 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 			} else {
 				ns.Append(resns...)
 			}
-			errs = errs[:0]
+			errs.clear()
 		}
 
 		if len(errs) > 0 {
 			return &operError{key, pos, multiError(errs)}
 		}
+		errs.free()
 		return nil
 	}
 }
@@ -313,7 +315,8 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 			max = min
 		}
 
-		errs := make([]error, 0, max-min+1)
+		errs := newMultiErr(max - min + 1)
+
 		for i := min; i < max || max == 0; i++ {
 			newns.Clear()
 
@@ -347,7 +350,8 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 				curns.Clear()
 				curns.Append(newns...)
 				resns.Append(newns...)
-				errs = errs[:0]
+
+				errs.clear()
 			} else {
 				break
 			}
@@ -358,12 +362,13 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 				sort.Sort(nodeSorter(resns))
 			}
 			ns.Append(resns...)
-			errs = errs[:0]
+			errs.clear()
 		}
 
 		if len(errs) > 0 {
 			return &operError{key, pos, multiError(errs)}
 		}
+		errs.free()
 		return nil
 	}
 }
