@@ -1,6 +1,7 @@
 package abnf_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -1062,4 +1063,38 @@ func BenchmarkCombo(b *testing.B) {
 			b.Error("operator returned 0 nodes, want at least 1")
 		}
 	}
+}
+
+func ExampleConcat() {
+	op := abnf.Concat(
+		`"a" "b" *"cd"`,
+		abnf.Literal(`"a"`, []byte("a")),
+		abnf.Literal(`"b"`, []byte("b")),
+		abnf.Repeat0Inf(`*"cd"`, abnf.Literal(`"cd"`, []byte("cd"))),
+	)
+
+	ns := abnf.NewNodes()
+	defer ns.Free()
+
+	if err := op([]byte("ab"), 0, &ns); err != nil {
+		panic(err)
+	}
+	fmt.Println(ns.Best())
+
+	ns.Clear()
+	if err := op([]byte("abcd"), 0, &ns); err != nil {
+		panic(err)
+	}
+	fmt.Println(ns.Best())
+
+	ns.Clear()
+	if err := op([]byte("abcdcd"), 0, &ns); err != nil {
+		panic(err)
+	}
+	fmt.Println(ns.Best())
+
+	// Output:
+	// ab
+	// abcd
+	// abcdcd
 }

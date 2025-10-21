@@ -35,7 +35,7 @@ import (
     "github.com/ghettovoice/abnf"
 )
 
-var abc = abnf.Concat(
+var op = abnf.Concat(
     `"a" "b" *"cd"`,
     abnf.Literal(`"a"`, []byte("a")),
     abnf.Literal(`"b"`, []byte("b")),
@@ -46,13 +46,27 @@ func main() {
     ns := abnf.NewNodes()
     defer ns.Free()
 
-    fmt.Println(abc([]byte("ab"), 0, ns))
+    if err := op([]byte("ab"), 0, &ns); err != nil {
+        panic(err)
+    }
+    fmt.Println(ns.Best())
 
     ns.Clear()
-    fmt.Println(abc([]byte("abcd"), 0, ns))
+    if err := op([]byte("abcd"), 0, &ns); err != nil {
+        panic(err)
+    }
+    fmt.Println(ns.Best())
 
     ns.Clear()
-    fmt.Println(abc([]byte("abcdcd"), 0, ns))
+    if err := op([]byte("abcdcd"), 0, &ns); err != nil {
+        panic(err)
+    }
+    fmt.Println(ns.Best())
+
+    // Output:
+    // ab
+    // abcd
+    // abcdcd
 }
 ```
 
