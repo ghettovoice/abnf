@@ -43,11 +43,16 @@ var abc = abnf.Concat(
 )
 
 func main() {
-    var ns abnf.Nodes
+    ns := abnf.NewNodes()
+    defer ns.Free()
 
-    fmt.Println(abc([]byte("ab"), 0, ns[:0]))
-    fmt.Println(abc([]byte("abcd"), 0, ns[:0]))
-    fmt.Println(abc([]byte("abcdcd"), 0, ns[:0]))
+    fmt.Println(abc([]byte("ab"), 0, ns))
+
+    ns.Clear()
+    fmt.Println(abc([]byte("abcd"), 0, ns))
+
+    ns.Clear()
+    fmt.Println(abc([]byte("abcdcd"), 0, ns))
 }
 ```
 
