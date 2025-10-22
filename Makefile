@@ -10,7 +10,7 @@ install:
 	go install -v ./cmd/...
 
 test:
-	go test -vet=all -covermode=atomic -coverprofile=cover.out ./$(PKG_PATH)
+	go test -race -vet=all -covermode=atomic -coverprofile=cover.out ./$(PKG_PATH)
 
 lint:
 	go tool golangci-lint run -v ./...
