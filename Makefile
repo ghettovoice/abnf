@@ -37,6 +37,6 @@ release:
 	@sed -i '' 's/^const VERSION = ".*"/const VERSION = "$(VERSION)"/' abnf.go
 	git add abnf.go
 	git commit -m "Release $(VERSION)"
-	git tag $(VERSION)
+	git tag -a $(VERSION) -m "Release $(VERSION)"
 	@echo "\nRelease $(VERSION) is ready to be pushed. Run the following command to publish:"
 	@echo "  git push --follow-tags"
