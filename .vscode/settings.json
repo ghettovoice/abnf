@@ -34,7 +34,8 @@
     "go.lintTool": "golangci-lint-v2",
     "go.testExplorer.packageDisplayMode": "nested",
     "go.testFlags": [
-        "-count=1"
+        "-vet=all",
+        "-count=1",
     ],
     "go.toolsManagement.autoUpdate": true,
     "go.vetFlags": [

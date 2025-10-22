@@ -249,7 +249,7 @@ func (ns *Nodes) Append(n ...*Node) {
 // NodesCap is a initial capacity of a new nodes list.
 var NodesCap = 100
 
-var nsPool = &sync.Pool{
+var nodesPool = &sync.Pool{
 	New: func() any {
 		ns := make(Nodes, 0, NodesCap)
 		return &ns
@@ -258,7 +258,7 @@ var nsPool = &sync.Pool{
 
 // NewNodes returns a new nodes list from the pool.
 func NewNodes() Nodes {
-	ns := nsPool.Get().(*Nodes)
+	ns := nodesPool.Get().(*Nodes)
 	return *ns
 }
 
@@ -280,5 +280,5 @@ func (ns *Nodes) Free() {
 		return
 	}
 
-	nsPool.Put(ns)
+	nodesPool.Put(ns)
 }

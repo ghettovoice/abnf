@@ -300,15 +300,13 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 
 		curns.Append(resns...)
 
-		errs := newMultiErr(max - min + 1)
-
 		for i := min; i < max || max == 0; i++ {
 			newns.Clear()
 
 			for _, n := range curns {
 				subns.Clear()
 				if err := op(in, n.Pos+uint(len(n.Value)), &subns); err != nil {
-					errs = append(errs, err)
+					// ignore errors, we already match min times
 					continue
 				}
 
@@ -323,21 +321,12 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 
 			curns, newns = newns, curns
 			resns.Append(curns...)
-			errs.clear()
 		}
 
-		if len(resns) > 0 {
 			if len(resns) > 1 {
 				sort.Sort(nodeSorter(resns))
 			}
 			ns.Append(resns...)
-			errs.clear()
-		}
-
-		if len(errs) > 0 {
-			return operError{key, pos, multiError(errs)} //errtrace:skip
-		}
-		errs.free()
 		return nil
 	}
 }
