@@ -89,12 +89,17 @@ func Range(key string, low, high []byte) Operator {
 }
 
 func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
-	return func(in []byte, pos uint, ns *Nodes) error {
+	return func(in []byte, pos uint, ns *Nodes) (finErr error) {
 		resns, subns := NewNodes(), NewNodes()
 		defer resns.Free()
 		defer subns.Free()
 
 		errs := newMultiErr(uint(len(ops) + 1))
+		defer func() {
+			if finErr == nil {
+				errs.free()
+			}
+		}()
 
 		runOp := func(op Operator) bool {
 			subns.Clear()
@@ -129,7 +134,6 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 		if len(errs) > 0 {
 			return operError{key, pos, multiError(errs)} //errtrace:skip
 		}
-		errs.free()
 		return nil
 	}
 }
@@ -139,13 +143,12 @@ func newAltNode(key string, pos uint, sn *Node, in []byte) *Node {
 	return loadOrStoreNode(
 		newNodeCacheKey(key, pos, uint(len(sn.Value)), in, sn),
 		func() *Node {
-			nn := &Node{
-				Key:   key,
-				Pos:   pos,
-				Value: in[pos : pos+uint(len(sn.Value))],
+			return &Node{
+				Key:      key,
+				Pos:      pos,
+				Value:    in[pos : pos+uint(len(sn.Value))],
+				Children: append(NewNodes(), sn),
 			}
-			nn.Children = append(NewNodes(), sn)
-			return nn
 		},
 	)
 }
@@ -165,7 +168,7 @@ func AltFirst(key string, op Operator, ops ...Operator) Operator {
 }
 
 func concat(key string, all bool, op Operator, ops ...Operator) Operator {
-	return func(in []byte, pos uint, ns *Nodes) error {
+	return func(in []byte, pos uint, ns *Nodes) (finErr error) {
 		resns := NewNodes()
 		defer resns.Free()
 		resns.Append(loadOrStoreNode(
@@ -178,6 +181,11 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 		defer subns.Free()
 
 		errs := newMultiErr(uint(len(ops) + 1))
+		defer func() {
+			if finErr == nil {
+				errs.free()
+			}
+		}()
 
 		runOp := func(op Operator) bool {
 			newns.Clear()
@@ -224,7 +232,6 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 		if len(errs) > 0 {
 			return operError{key, pos, multiError(errs)} //errtrace:skip
 		}
-		errs.free()
 		return nil
 	}
 }
@@ -234,13 +241,12 @@ func newConcatNode(key string, n, sn *Node, in []byte) *Node {
 	ck := newNodeCacheKey(key, n.Pos, uint(len(n.Value)+len(sn.Value)), in, n.Children...)
 	ck.writeChildKeys(0, sn)
 	return loadOrStoreNode(ck, func() *Node {
-		nn := &Node{
+		return &Node{
 			Key:      key,
 			Pos:      n.Pos,
 			Value:    in[n.Pos : int(n.Pos)+len(n.Value)+len(sn.Value)],
 			Children: append(append(NewNodes(), n.Children...), sn),
 		}
-		return nn
 	})
 }
 
@@ -323,10 +329,10 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 			resns.Append(curns...)
 		}
 
-			if len(resns) > 1 {
-				sort.Sort(nodeSorter(resns))
-			}
-			ns.Append(resns...)
+		if len(resns) > 1 {
+			sort.Sort(nodeSorter(resns))
+		}
+		ns.Append(resns...)
 		return nil
 	}
 }

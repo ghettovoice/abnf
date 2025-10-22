@@ -8,6 +8,7 @@ import (
 	"github.com/ghettovoice/abnf/pkg/abnf_core"
 	"github.com/ghettovoice/abnf/pkg/abnf_gen"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestParserGenerator_Operators(t *testing.T) {
@@ -63,7 +64,10 @@ func TestParserGenerator_Operators(t *testing.T) {
 			},
 		},
 	}
-	if !cmp.Equal(ns, want) {
-		t.Fatalf("op([]byte(\"0\"), 0, nil) = %+v, want %+v\ndiff (-got +want):\n%v", ns, want, cmp.Diff(ns, want))
+	if !cmp.Equal(ns, want, cmpopts.EquateEmpty()) {
+		t.Fatalf("op([]byte(\"0\"), 0, nil) = %+v, want %+v\ndiff (-got +want):\n%v",
+			ns, want,
+			cmp.Diff(ns, want, cmpopts.EquateEmpty()),
+		)
 	}
 }
