@@ -61,10 +61,10 @@ func TestRulesDescr_ALPHA(t *testing.T) {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().ALPHA(%q, nil) error = %v, want nil", c.in, err)
 				}
-				if !cmp.Equal(ns, c.wantNs) {
+				if !cmp.Equal(ns, c.wantNs, cmpopts.EquateEmpty()) {
 					t.Fatalf("abnf_core.Rules().ALPHA(%q, nil) = %v, want %v\ndiff (-got +want):\n%v",
 						c.in, ns, c.wantNs,
-						cmp.Diff(ns, c.wantNs),
+						cmp.Diff(ns, c.wantNs, cmpopts.EquateEmpty()),
 					)
 				}
 			} else {
@@ -131,10 +131,10 @@ func TestRulesDescr_BIT(t *testing.T) {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().BIT(%q, nil) error = %v, want nil", c.in, err)
 				}
-				if !cmp.Equal(ns, c.wantNs) {
+				if !cmp.Equal(ns, c.wantNs, cmpopts.EquateEmpty()) {
 					t.Fatalf("abnf_core.Rules().BIT(%q, nil) = %v, want %v\ndiff (-got +want):\n%v",
 						c.in, ns, c.wantNs,
-						cmp.Diff(ns, c.wantNs),
+						cmp.Diff(ns, c.wantNs, cmpopts.EquateEmpty()),
 					)
 				}
 			} else {
@@ -191,10 +191,10 @@ func TestRulesDescr_CHAR(t *testing.T) {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().CHAR(%q, nil) error = %v, want nil", c.in, err)
 				}
-				if !cmp.Equal(ns, c.wantNs) {
+				if !cmp.Equal(ns, c.wantNs, cmpopts.EquateEmpty()) {
 					t.Fatalf("abnf_core.Rules().CHAR(%q, nil) = %v, want %v\ndiff (-got +want):\n%v",
 						c.in, ns, c.wantNs,
-						cmp.Diff(ns, c.wantNs),
+						cmp.Diff(ns, c.wantNs, cmpopts.EquateEmpty()),
 					)
 				}
 			} else {
@@ -268,10 +268,10 @@ func TestRulesDescr_CRLF(t *testing.T) {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().CRLF(%q, nil) error = %v, want nil", c.in, err)
 				}
-				if !cmp.Equal(ns, c.wantNs) {
+				if !cmp.Equal(ns, c.wantNs, cmpopts.EquateEmpty()) {
 					t.Fatalf("abnf_core.Rules().CRLF(%q, nil) = %v, want %v\ndiff (-got +want):\n%v",
 						c.in, ns, c.wantNs,
-						cmp.Diff(ns, c.wantNs),
+						cmp.Diff(ns, c.wantNs, cmpopts.EquateEmpty()),
 					)
 				}
 			} else {
@@ -320,10 +320,10 @@ func TestRulesDescr_CTL(t *testing.T) {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().CTL(%q, nil) error = %v, want nil", c.in, err)
 				}
-				if !cmp.Equal(ns, c.wantNs) {
+				if !cmp.Equal(ns, c.wantNs, cmpopts.EquateEmpty()) {
 					t.Fatalf("abnf_core.Rules().CTL(%q, nil) = %v, want %v\ndiff (-got +want):\n%v",
 						c.in, ns, c.wantNs,
-						cmp.Diff(ns, c.wantNs),
+						cmp.Diff(ns, c.wantNs, cmpopts.EquateEmpty()),
 					)
 				}
 			} else {
@@ -384,10 +384,10 @@ func TestRulesDescr_DIGIT(t *testing.T) {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().DIGIT(%q, nil) error = %v, want nil", c.in, err)
 				}
-				if !cmp.Equal(ns, c.wantNs) {
+				if !cmp.Equal(ns, c.wantNs, cmpopts.EquateEmpty()) {
 					t.Fatalf("abnf_core.Rules().DIGIT(%q, nil) = %v, want %v\ndiff (-got +want):\n%v",
 						c.in, ns, c.wantNs,
-						cmp.Diff(ns, c.wantNs),
+						cmp.Diff(ns, c.wantNs, cmpopts.EquateEmpty()),
 					)
 				}
 			} else {
@@ -438,10 +438,10 @@ func TestRulesDescr_DQUOTE(t *testing.T) {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().DQUOTE(%q, nil) error = %v, want nil", c.in, err)
 				}
-				if !cmp.Equal(ns, c.wantNs) {
+				if !cmp.Equal(ns, c.wantNs, cmpopts.EquateEmpty()) {
 					t.Fatalf("abnf_core.Rules().DQUOTE(%q, nil) = %v, want %v\ndiff (-got +want):\n%v",
 						c.in, ns, c.wantNs,
-						cmp.Diff(ns, c.wantNs),
+						cmp.Diff(ns, c.wantNs, cmpopts.EquateEmpty()),
 					)
 				}
 			} else {
@@ -521,10 +521,10 @@ func TestRulesDescr_HEXDIG(t *testing.T) {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().HEXDIG(%q, nil) error = %v, want nil", c.in, err)
 				}
-				if !cmp.Equal(ns, c.wantNs) {
+				if !cmp.Equal(ns, c.wantNs, cmpopts.EquateEmpty()) {
 					t.Fatalf("abnf_core.Rules().HEXDIG(%q, nil) = %v, want %v\ndiff (-got +want):\n%v",
 						c.in, ns, c.wantNs,
-						cmp.Diff(ns, c.wantNs),
+						cmp.Diff(ns, c.wantNs, cmpopts.EquateEmpty()),
 					)
 				}
 			} else {
@@ -575,10 +575,10 @@ func TestRulesDescr_HTAB(t *testing.T) {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().HTAB(%q, nil) error = %v, want nil", c.in, err)
 				}
-				if !cmp.Equal(ns, c.wantNs) {
+				if !cmp.Equal(ns, c.wantNs, cmpopts.EquateEmpty()) {
 					t.Fatalf("abnf_core.Rules().HTAB(%q, nil) = %v, want %v\ndiff (-got +want):\n%v",
 						c.in, ns, c.wantNs,
-						cmp.Diff(ns, c.wantNs),
+						cmp.Diff(ns, c.wantNs, cmpopts.EquateEmpty()),
 					)
 				}
 			} else {
@@ -680,10 +680,10 @@ func TestRulesDescr_LWSP(t *testing.T) {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().LWSP(%q, nil) error = %v, want nil", c.in, err)
 				}
-				if !cmp.Equal(ns, c.wantNs) {
+				if !cmp.Equal(ns, c.wantNs, cmpopts.EquateEmpty()) {
 					t.Fatalf("abnf_core.Rules().LWSP(%q, nil) = %v, want %v\ndiff (-got +want):\n%v",
 						c.in, ns, c.wantNs,
-						cmp.Diff(ns, c.wantNs),
+						cmp.Diff(ns, c.wantNs, cmpopts.EquateEmpty()),
 					)
 				}
 			} else {
@@ -726,10 +726,10 @@ func TestRulesDescr_OCTET(t *testing.T) {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().OCTET(%q, nil) error = %v, want nil", c.in, err)
 				}
-				if !cmp.Equal(ns, c.wantNs) {
+				if !cmp.Equal(ns, c.wantNs, cmpopts.EquateEmpty()) {
 					t.Fatalf("abnf_core.Rules().OCTET(%q, nil) = %v, want %v\ndiff (-got +want):\n%v",
 						c.in, ns, c.wantNs,
-						cmp.Diff(ns, c.wantNs),
+						cmp.Diff(ns, c.wantNs, cmpopts.EquateEmpty()),
 					)
 				}
 			} else {
@@ -772,10 +772,10 @@ func TestRulesDescr_VCHAR(t *testing.T) {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().VCHAR(%q, nil) error = %v, want nil", c.in, err)
 				}
-				if !cmp.Equal(ns, c.wantNs) {
+				if !cmp.Equal(ns, c.wantNs, cmpopts.EquateEmpty()) {
 					t.Fatalf("abnf_core.Rules().VCHAR(%q, nil) = %v, want %v\ndiff (-got +want):\n%v",
 						c.in, ns, c.wantNs,
-						cmp.Diff(ns, c.wantNs),
+						cmp.Diff(ns, c.wantNs, cmpopts.EquateEmpty()),
 					)
 				}
 			} else {
@@ -837,10 +837,10 @@ func TestRulesDescr_WSP(t *testing.T) {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().WSP(%q, nil) error = %v, want nil", c.in, err)
 				}
-				if !cmp.Equal(ns, c.wantNs) {
+				if !cmp.Equal(ns, c.wantNs, cmpopts.EquateEmpty()) {
 					t.Fatalf("abnf_core.Rules().WSP(%q, nil) = %v, want %v\ndiff (-got +want):\n%v",
 						c.in, ns, c.wantNs,
-						cmp.Diff(ns, c.wantNs),
+						cmp.Diff(ns, c.wantNs, cmpopts.EquateEmpty()),
 					)
 				}
 			} else {

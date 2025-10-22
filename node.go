@@ -6,6 +6,7 @@ import (
 	"hash"
 	"hash/fnv"
 	"sync"
+	"sync/atomic"
 	"unsafe"
 
 	lru "github.com/hashicorp/golang-lru/v2"
@@ -86,20 +87,47 @@ func (n *Node) Compare(other *Node) int {
 	return bytes.Compare(n.Value, other.Value)
 }
 
-var nodeCache *lru.Cache[uint64, *Node]
+var nodeCache atomic.Pointer[lru.Cache[uint64, *Node]]
 
-// InitNodeCache initializes the node cache.
-// If size is 0, it will be set to 512.
+// EnableNodeCache initializes the node cache.
+// If size is 0, it will be set to 1024.
+// By default, the cache is disabled.
+// It does nothing if the cache is already enabled.
 // Call this function before using any [Operator], usually in the [init].
-func InitNodeCache(size uint) {
-	if size == 0 {
-		size = 512
+func EnableNodeCache(size uint) {
+	if nodeCache.Load() != nil {
+		return
 	}
-	nodeCache, _ = lru.New[uint64, *Node](int(size))
+
+	if size == 0 {
+		size = 1024
+	}
+
+	cache, _ := lru.New[uint64, *Node](int(size))
+	nodeCache.Store(cache)
 }
 
-func init() {
-	InitNodeCache(512)
+// ResizeNodeCache resizes the node cache.
+// If size is 0, it will be set to 1024.
+// It does nothing if the cache is disabled.
+// It is safe to call this function from multiple goroutines.
+func ResizeNodeCache(size uint) {
+	if size == 0 {
+		size = 1024
+	}
+
+	if cache := nodeCache.Load(); cache != nil {
+		cache.Resize(int(size))
+	}
+}
+
+// DisableNodeCache disables the node cache and purges all cached nodes.
+// It does nothing if the cache is already disabled.
+// It is safe to call this function from multiple goroutines.
+func DisableNodeCache() {
+	if cache := nodeCache.Swap(nil); cache != nil {
+		cache.Purge()
+	}
 }
 
 type nodeCacheKey struct {
@@ -160,7 +188,12 @@ func unsafeStringToBytes(s string) []byte {
 }
 
 func loadNode(k *nodeCacheKey) (*Node, bool) {
-	n, ok := nodeCache.Get(k.hash())
+	cache := nodeCache.Load()
+	if cache == nil {
+		return nil, false
+	}
+
+	n, ok := cache.Get(k.hash())
 	if !ok {
 		return nil, false
 	}
@@ -168,11 +201,21 @@ func loadNode(k *nodeCacheKey) (*Node, bool) {
 }
 
 func storeNode(k *nodeCacheKey, n *Node) {
-	nodeCache.Add(k.hash(), n)
+	cache := nodeCache.Load()
+	if cache == nil {
+		return
+	}
+
+	cache.Add(k.hash(), n)
 }
 
 func loadOrStoreNode(k *nodeCacheKey, newNode func() *Node) *Node {
 	defer k.free()
+
+	cache := nodeCache.Load()
+	if cache == nil {
+		return newNode()
+	}
 
 	if n, ok := loadNode(k); ok {
 		return n

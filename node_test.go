@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"github.com/ghettovoice/abnf"
 )
@@ -20,14 +21,17 @@ func TestNode_GetNode(t *testing.T) {
 		},
 	}
 
-	if got, ok := n.GetNode("ab"); !ok || !cmp.Equal(got, n) {
-		t.Errorf("n.GetNode(\"ab\") = (%+v, %v), want (%+v, true)\ndiff (-got +want):\n%v", got, ok, n, cmp.Diff(got, n))
+	if got, ok := n.GetNode("ab"); !ok || !cmp.Equal(got, n, cmpopts.EquateEmpty()) {
+		t.Errorf("n.GetNode(\"ab\") = (%+v, %v), want (%+v, true)\ndiff (-got +want):\n%v",
+			got, ok, n,
+			cmp.Diff(got, n, cmpopts.EquateEmpty()),
+		)
 	}
-	if got, ok := n.GetNode("a"); !ok || !cmp.Equal(got, &abnf.Node{Key: "a", Value: []byte("a")}) {
+	if got, ok := n.GetNode("a"); !ok || !cmp.Equal(got, &abnf.Node{Key: "a", Value: []byte("a")}, cmpopts.EquateEmpty()) {
 		t.Errorf("n.GetNode(\"a\") = (%+v, %v), want (%+v, true)\ndiff (-got +want):\n%v",
 			got, ok,
 			&abnf.Node{Key: "a", Value: []byte("a")},
-			cmp.Diff(got, &abnf.Node{Key: "a", Value: []byte("a")}),
+			cmp.Diff(got, &abnf.Node{Key: "a", Value: []byte("a")}, cmpopts.EquateEmpty()),
 		)
 	}
 	if got, ok := n.GetNode("d"); ok || got != nil {
@@ -80,7 +84,10 @@ func TestNodes_Best(t *testing.T) {
 		},
 	}
 
-	if got := ns.Best(); !cmp.Equal(got, want) {
-		t.Fatalf("ns.Best() = %+v, want %+v\ndiff (-got +want):\n%v", got, want, cmp.Diff(got, want))
+	if got := ns.Best(); !cmp.Equal(got, want, cmpopts.EquateEmpty()) {
+		t.Fatalf("ns.Best() = %+v, want %+v\ndiff (-got +want):\n%v",
+			got, want,
+			cmp.Diff(got, want, cmpopts.EquateEmpty()),
+		)
 	}
 }
