@@ -1,4 +1,4 @@
-PKG_PATH=...
+PKG=...
 
 setup:
 	go mod tidy
@@ -10,7 +10,7 @@ install:
 	go install -v ./cmd/...
 
 test:
-	go test -race -vet=all -covermode=atomic -coverprofile=cover.out ./$(PKG_PATH)
+	go test -race -vet=all -covermode=atomic -coverprofile=cover.out ./$(PKG)
 
 lint:
 	go tool golangci-lint run -v ./...
@@ -42,10 +42,14 @@ release:
 	@echo "  git push --follow-tags"
 
 bench:
-	@if [ -z "$(PKG_PATH)" ] || [ "$(PKG_PATH)" = "..." ] ; then \
-		echo "Error: PKG_PATH is not set. Usage: make bench PKG_PATH=a/b/c" >&2; \
+	@if [ -z "$(PKG)" ] || [ "$(PKG)" = "..." ] ; then \
+		echo "Error: PKG is not set. Usage: make bench PKG=a/b/c" >&2; \
 		exit 1; \
 	fi
-	$(eval PREFIX := $(shell if [ "$(PKG_PATH)" = "." ]; then echo "abnf"; else echo "$(PKG_PATH)" | sed 's#/#_#g'; fi ))
-	echo $(PREFIX)
-	go test -vet=all -run=. -bench=. -benchmem -count=10 -memprofile=$(PREFIX)_mem.out -cpuprofile=$(PREFIX)_cpu.out ./$(PKG_PATH) | tee $(PREFIX)_bench.out
+	$(eval PREFIX := $(shell if [ "$(PKG)" = "." ]; then echo "abnf"; else echo "$(PKG)" | sed 's#/#_#g'; fi ))
+	$(eval SUFFIX := $(shell echo "_$(shell date +%Y%m%d%H%M%S)"))
+	go test -vet=all -run=. -bench=. -benchmem -count=10 \
+		-memprofile=$(PREFIX)_mem$(SUFFIX).out \
+		-cpuprofile=$(PREFIX)_cpu$(SUFFIX).out \
+		./$(PKG) \
+	| tee $(PREFIX)_bench$(SUFFIX).out
