@@ -15,13 +15,13 @@ func TestOperator(t *testing.T) {
 		name    string
 		op      abnf.Operator
 		in      []byte
-		wantNs  abnf.Nodes
+		wantNs  *abnf.Nodes
 		wantErr error
 	}{
 		{"literal 1",
 			abnf.Literal("qwe", []byte("qwe")),
 			[]byte("Qwerty"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{Key: "qwe", Value: []byte("Qwe")},
 			},
 			nil,
@@ -35,7 +35,7 @@ func TestOperator(t *testing.T) {
 		{"literal 3",
 			abnf.Literal("м", []byte("м")),
 			[]byte("МИР"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{Key: "м", Value: []byte("М")},
 			},
 			nil,
@@ -43,7 +43,7 @@ func TestOperator(t *testing.T) {
 		{"literal 4",
 			abnf.LiteralCS("Qwe", []byte("Qwe")),
 			[]byte("Qwerty"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{Key: "Qwe", Value: []byte("Qwe")},
 			},
 			nil,
@@ -64,7 +64,7 @@ func TestOperator(t *testing.T) {
 		{"range 1",
 			abnf.Range("%x61-7A", []byte{97}, []byte{122}),
 			[]byte("qwe"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{Key: "%x61-7A", Value: []byte("q")},
 			},
 			nil,
@@ -84,7 +84,7 @@ func TestOperator(t *testing.T) {
 		{"range 4",
 			abnf.Range("%x5D-10FFFF", []byte{93}, []byte{16, 255, 255}),
 			[]byte("xxx"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{Key: "%x5D-10FFFF", Value: []byte("x")},
 			},
 			nil,
@@ -96,7 +96,7 @@ func TestOperator(t *testing.T) {
 				abnf.Literal("b", []byte("b")),
 			),
 			[]byte("a"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `"a" / "b"`,
 					Value: []byte("a"),
@@ -113,7 +113,7 @@ func TestOperator(t *testing.T) {
 				abnf.Literal("b", []byte("b")),
 			),
 			[]byte("b"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `"a" / "b"`,
 					Value: []byte("b"),
@@ -136,7 +136,7 @@ func TestOperator(t *testing.T) {
 		{"alt 4",
 			abnf.Alt(`"a" / "ab"`, abnf.Literal(`"a"`, []byte("a")), abnf.Literal(`"ab"`, []byte("ab"))),
 			[]byte("abc"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `"a" / "ab"`,
 					Value: []byte("ab"),
@@ -161,7 +161,7 @@ func TestOperator(t *testing.T) {
 				abnf.Literal(`"ab"`, []byte("ab")),
 			),
 			[]byte("abc"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `"b" / "a" / "ab"`,
 					Value: []byte("a"),
@@ -180,7 +180,7 @@ func TestOperator(t *testing.T) {
 				abnf.Literal("c", []byte("c")),
 			),
 			[]byte("abc"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `"a" "b" "c"`,
 					Value: []byte("abc"),
@@ -207,7 +207,7 @@ func TestOperator(t *testing.T) {
 		{"opt 1",
 			abnf.Optional(`[ "a" ]`, abnf.Literal("a", []byte("a"))),
 			[]byte("abc"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `[ "a" ]`,
 					Value: []byte("a"),
@@ -225,7 +225,7 @@ func TestOperator(t *testing.T) {
 		{"opt 2",
 			abnf.Optional(`[ "a" ]`, abnf.Literal("a", []byte("a"))),
 			[]byte("b"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `[ "a" ]`,
 					Value: []byte{},
@@ -237,7 +237,7 @@ func TestOperator(t *testing.T) {
 		{"repeat 1",
 			abnf.Repeat(`*1( "a" )`, 0, 1, abnf.Literal("a", []byte("a"))),
 			[]byte("aaa"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `*1( "a" )`,
 					Value: []byte("a"),
@@ -255,7 +255,7 @@ func TestOperator(t *testing.T) {
 		{"repeat 2",
 			abnf.Repeat(`*1( "a" )`, 0, 1, abnf.Literal("a", []byte("a"))),
 			[]byte("bbb"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `*1( "a" )`,
 					Value: []byte{},
@@ -272,7 +272,7 @@ func TestOperator(t *testing.T) {
 		{"repeat 4",
 			abnf.Repeat(`2*3( "a" )`, 2, 3, abnf.Literal("a", []byte("a"))),
 			[]byte("aa"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `2*3( "a" )`,
 					Value: []byte("aa"),
@@ -287,7 +287,7 @@ func TestOperator(t *testing.T) {
 		{"repeat 5",
 			abnf.Repeat(`2*3( "a" )`, 2, 3, abnf.Literal("a", []byte("a"))),
 			[]byte("aaa"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `2*3( "a" )`,
 					Value: []byte("aaa"),
@@ -311,7 +311,7 @@ func TestOperator(t *testing.T) {
 		{"repeat 6",
 			abnf.Repeat(`3( "a" )`, 3, 2, abnf.Literal("a", []byte("a"))),
 			[]byte("aaa"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `3( "a" )`,
 					Value: []byte("aaa"),
@@ -333,7 +333,7 @@ func TestOperator(t *testing.T) {
 		{"repeat 8",
 			abnf.Repeat0Inf(`*( "a" )`, abnf.Literal("a", []byte("a"))),
 			[]byte(""),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{Key: `*( "a" )`, Value: []byte{}},
 			},
 			nil,
@@ -341,7 +341,7 @@ func TestOperator(t *testing.T) {
 		{"repeat 9",
 			abnf.Repeat0Inf(`*( "a" )`, abnf.Literal("a", []byte("a"))),
 			[]byte("aaa"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `*( "a" )`,
 					Value: []byte("aaa"),
@@ -376,7 +376,7 @@ func TestOperator(t *testing.T) {
 		{"repeat 10",
 			abnf.Repeat1Inf(`1*( "a" )`, abnf.Literal("a", []byte("a"))),
 			[]byte("aaa"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `1*( "a" )`,
 					Value: []byte("aaa"),
@@ -407,7 +407,7 @@ func TestOperator(t *testing.T) {
 		{"repeat 11",
 			abnf.Repeat1Inf(`1*( "a" )`, abnf.Literal("a", []byte("a"))),
 			[]byte("a"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `1*( "a" )`,
 					Value: []byte("a"),
@@ -431,7 +431,7 @@ func TestOperator(t *testing.T) {
 				abnf.Literal("bc", []byte("bc")),
 			),
 			[]byte("abc"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `[ "a" ] "bc"`,
 					Pos:   0,
@@ -457,7 +457,7 @@ func TestOperator(t *testing.T) {
 				abnf.Literal("abc", []byte("abc")),
 			),
 			[]byte("abc"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `[ "a" ] "abc"`,
 					Pos:   0,
@@ -480,7 +480,7 @@ func TestOperator(t *testing.T) {
 				abnf.Literal("a", []byte("a")),
 			),
 			[]byte("aa"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `[ "a" ] "a"`,
 					Pos:   0,
@@ -506,7 +506,7 @@ func TestOperator(t *testing.T) {
 				abnf.Literal("a", []byte("a")),
 			),
 			[]byte("aa"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `[ "a" ] "a"`,
 					Pos:   0,
@@ -541,7 +541,7 @@ func TestOperator(t *testing.T) {
 				abnf.Literal("a", []byte("a")),
 			),
 			[]byte("a"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `[ "a" ] "a"`,
 					Pos:   0,
@@ -557,7 +557,7 @@ func TestOperator(t *testing.T) {
 		{"combo 6",
 			abnf.Repeat0Inf(`*( [ "a" ] )`, abnf.Optional(`[ "a" ]`, abnf.Literal("a", []byte("a")))),
 			[]byte(""),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `*( [ "a" ] )`,
 					Pos:   0,
@@ -569,7 +569,7 @@ func TestOperator(t *testing.T) {
 		{"combo 7",
 			abnf.Repeat0Inf(`*( [ "a" ] )`, abnf.Optional(`[ "a" ]`, abnf.Literal("a", []byte("a")))),
 			[]byte("aa"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `*( [ "a" ] )`,
 					Pos:   0,
@@ -677,7 +677,7 @@ func TestOperator(t *testing.T) {
 				abnf.Literal("a", []byte("a")),
 			),
 			[]byte("aa"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `"a" *( "a" / "b" ) "a"`,
 					Pos:   0,
@@ -703,7 +703,7 @@ func TestOperator(t *testing.T) {
 				abnf.Literal("a", []byte("a")),
 			),
 			[]byte("aaa"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `"a" *( "a" / "b" ) "a"`,
 					Pos:   0,
@@ -743,7 +743,7 @@ func TestOperator(t *testing.T) {
 				abnf.Literal("a", []byte("a")),
 			),
 			[]byte("aaba"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `"a" *( "a" / "b" ) "a"`,
 					Pos:   0,
@@ -788,7 +788,7 @@ func TestOperator(t *testing.T) {
 				abnf.Literal("a", []byte("a")),
 			),
 			[]byte("a"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `(*"a" / *"b") "a"`,
 					Pos:   0,
@@ -817,7 +817,7 @@ func TestOperator(t *testing.T) {
 				abnf.Literal("a", []byte("a")),
 			),
 			[]byte("aa"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   `(*"a" / *"b") "a"`,
 					Pos:   0,
@@ -852,7 +852,7 @@ func TestOperator(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ns.Clear()
-			err := c.op(c.in, 0, &ns)
+			err := c.op(c.in, 0, ns)
 			if c.wantErr == nil {
 				if err != nil {
 					t.Fatalf("op(in, 0, nil) error = %q, want nil", err)
@@ -889,12 +889,12 @@ func BenchmarkLiteral(b *testing.B) {
 	b.ResetTimer()
 	for b.Loop() {
 		ns.Clear()
-		if err := op(in, 0, &ns); err != nil {
+		if err := op(in, 0, ns); err != nil {
 			b.Errorf("operator returned error %q, want nil", err)
 			continue
 		}
-		if len(ns) != 1 {
-			b.Errorf("operator returned %d nodes, want 1", len(ns))
+		if ns.Len() != 1 {
+			b.Errorf("operator returned %d nodes, want 1", ns.Len())
 		}
 	}
 }
@@ -912,12 +912,12 @@ func BenchmarkLiteral_unicode(b *testing.B) {
 	b.ResetTimer()
 	for b.Loop() {
 		ns.Clear()
-		if err := op(in, 0, &ns); err != nil {
+		if err := op(in, 0, ns); err != nil {
 			b.Errorf("operator returned error %q, want nil", err)
 			continue
 		}
-		if len(ns) != 1 {
-			b.Errorf("operator returned %d nodes, want 1", len(ns))
+		if ns.Len() != 1 {
+			b.Errorf("operator returned %d nodes, want 1", ns.Len())
 		}
 	}
 }
@@ -935,12 +935,12 @@ func BenchmarkLiteralCS(b *testing.B) {
 	b.ResetTimer()
 	for b.Loop() {
 		ns.Clear()
-		if err := op(in, 0, &ns); err != nil {
+		if err := op(in, 0, ns); err != nil {
 			b.Errorf("operator returned error %q, want nil", err)
 			continue
 		}
-		if len(ns) != 1 {
-			b.Errorf("operator returned %d nodes, want 1", len(ns))
+		if ns.Len() != 1 {
+			b.Errorf("operator returned %d nodes, want 1", ns.Len())
 		}
 	}
 }
@@ -955,12 +955,12 @@ func BenchmarkRange(b *testing.B) {
 	b.ResetTimer()
 	for b.Loop() {
 		ns.Clear()
-		if err := op(in, 0, &ns); err != nil {
+		if err := op(in, 0, ns); err != nil {
 			b.Errorf("operator returned error %q, want nil", err)
 			continue
 		}
-		if len(ns) != 1 {
-			b.Errorf("operator returned %d nodes, want 1", len(ns))
+		if ns.Len() != 1 {
+			b.Errorf("operator returned %d nodes, want 1", ns.Len())
 		}
 	}
 }
@@ -988,11 +988,11 @@ func BenchmarkAlt(tb *testing.B) {
 			b.ResetTimer()
 			for b.Loop() {
 				ns.Clear()
-				if err := op(in, 0, &ns); err != nil {
+				if err := op(in, 0, ns); err != nil {
 					b.Errorf("operator returned error %q, want nil", err)
 					continue
 				}
-				if len(ns) == 0 {
+				if ns.Len() == 0 {
 					b.Error("operator returned 0 nodes, want at least 1")
 				}
 			}
@@ -1013,11 +1013,11 @@ func BenchmarkConcat(b *testing.B) {
 	b.ResetTimer()
 	for b.Loop() {
 		ns.Clear()
-		if err := op(in, 0, &ns); err != nil {
+		if err := op(in, 0, ns); err != nil {
 			b.Errorf("operator returned error %q, want nil", err)
 			continue
 		}
-		if len(ns) == 0 {
+		if ns.Len() == 0 {
 			b.Error("operator returned 0 nodes, want at least 1")
 		}
 	}
@@ -1042,11 +1042,11 @@ func BenchmarkRepeat0Inf(b *testing.B) {
 			b.ResetTimer()
 			for b.Loop() {
 				ns.Clear()
-				if err := op(in, 0, &ns); err != nil {
+				if err := op(in, 0, ns); err != nil {
 					b.Errorf("operator returned error %q, want nil", err)
 					continue
 				}
-				if len(ns) == 0 {
+				if ns.Len() == 0 {
 					b.Error("operator returned 0 nodes, want at least 1")
 				}
 			}
@@ -1076,11 +1076,11 @@ func BenchmarkCombo(b *testing.B) {
 	b.ResetTimer()
 	for b.Loop() {
 		ns.Clear()
-		if err := op([]byte("abc"), 0, &ns); err != nil {
+		if err := op([]byte("abc"), 0, ns); err != nil {
 			b.Errorf("operator returned error %q, want nil", err)
 			continue
 		}
-		if len(ns) == 0 {
+		if ns.Len() == 0 {
 			b.Error("operator returned 0 nodes, want at least 1")
 		}
 	}
@@ -1097,19 +1097,19 @@ func ExampleConcat() {
 	ns := abnf.NewNodes()
 	defer ns.Free()
 
-	if err := op([]byte("ab"), 0, &ns); err != nil {
+	if err := op([]byte("ab"), 0, ns); err != nil {
 		panic(err)
 	}
 	fmt.Println(ns.Best())
 
 	ns.Clear()
-	if err := op([]byte("abcd"), 0, &ns); err != nil {
+	if err := op([]byte("abcd"), 0, ns); err != nil {
 		panic(err)
 	}
 	fmt.Println(ns.Best())
 
 	ns.Clear()
-	if err := op([]byte("abcdcd"), 0, &ns); err != nil {
+	if err := op([]byte("abcdcd"), 0, ns); err != nil {
 		panic(err)
 	}
 	fmt.Println(ns.Best())

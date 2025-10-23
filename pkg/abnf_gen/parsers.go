@@ -230,7 +230,7 @@ const (
 func parseRules(s []byte) (map[string]rule, error) {
 	ns := abnf.NewNodes()
 	defer ns.Free()
-	if err := abnf_def.Rules().Rulelist(s, &ns); err != nil {
+	if err := abnf_def.Rules().Rulelist(s, ns); err != nil {
 		return nil, errtrace.Wrap(fmt.Errorf("parse rules: %w", err))
 	}
 	n := ns.Best()

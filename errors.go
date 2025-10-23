@@ -75,18 +75,18 @@ const multiErrCap = 10
 
 var multiErrPool = &sync.Pool{
 	New: func() any {
-		errs := multiError(make([]error, 0, multiErrCap))
-		return &errs
+		me := make(multiError, 0, multiErrCap)
+		return &me
 	},
 }
 
-func newMultiErr(c uint) multiError {
-	var err multiError
+func newMultiErr(c uint) *multiError {
+	var err *multiError
 	if c <= multiErrCap {
-		errPtr := multiErrPool.Get().(*multiError)
-		err = *errPtr
+		err = multiErrPool.Get().(*multiError)
 	} else {
-		err = make(multiError, 0, c)
+		me := make(multiError, 0, c)
+		err = &me
 	}
 	return err
 }

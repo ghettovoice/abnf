@@ -39,11 +39,11 @@ func TestParserGenerator_Operators(t *testing.T) {
 	ns := abnf.NewNodes()
 	defer ns.Free()
 
-	if err := op([]byte("0"), 0, &ns); err != nil {
+	if err := op([]byte("0"), 0, ns); err != nil {
 		t.Fatalf("op([]byte(\"0\"), 0, nil) error = %v, want nil", err)
 	}
 
-	want := abnf.Nodes{
+	want := &abnf.Nodes{
 		{
 			Key:   "r1",
 			Value: []byte("0"),
