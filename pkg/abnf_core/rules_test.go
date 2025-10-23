@@ -857,6 +857,9 @@ func TestRulesDescr_WSP(t *testing.T) {
 }
 
 func BenchmarkToken(b *testing.B) {
+	abnf.EnableNodeCache(0)
+	defer abnf.DisableNodeCache()
+
 	alphanum := abnf.Alt(
 		"alphanum",
 		abnf_core.Operators().ALPHA,

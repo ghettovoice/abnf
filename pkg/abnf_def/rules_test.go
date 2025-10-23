@@ -73,6 +73,9 @@ func TestRulesDescr_Rulelist(t *testing.T) {
 }
 
 func BenchmarkRulesDescr_Rulelist(b *testing.B) {
+	abnf.EnableNodeCache(0)
+	defer abnf.DisableNodeCache()
+
 	in, err := os.ReadFile("./rules.abnf")
 	if err != nil {
 		b.Fatalf("read ABNF file: %s", err)

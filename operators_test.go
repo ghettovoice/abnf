@@ -877,6 +877,9 @@ func TestOperator(t *testing.T) {
 }
 
 func BenchmarkLiteral(b *testing.B) {
+	abnf.EnableNodeCache(0)
+	defer abnf.DisableNodeCache()
+
 	op := abnf.Literal("z", []byte("z"))
 	in := []byte("zzz")
 
@@ -897,6 +900,9 @@ func BenchmarkLiteral(b *testing.B) {
 }
 
 func BenchmarkLiteral_unicode(b *testing.B) {
+	abnf.EnableNodeCache(0)
+	defer abnf.DisableNodeCache()
+
 	op := abnf.Literal("м", []byte("м"))
 	in := []byte("мир")
 
@@ -917,6 +923,9 @@ func BenchmarkLiteral_unicode(b *testing.B) {
 }
 
 func BenchmarkLiteralCS(b *testing.B) {
+	abnf.EnableNodeCache(0)
+	defer abnf.DisableNodeCache()
+
 	op := abnf.LiteralCS("Z", []byte("Z"))
 	in := []byte("ZZZ")
 
@@ -957,6 +966,9 @@ func BenchmarkRange(b *testing.B) {
 }
 
 func BenchmarkAlt(tb *testing.B) {
+	abnf.EnableNodeCache(0)
+	defer abnf.DisableNodeCache()
+
 	op := abnf.Alt(`"a" / "b" / "c"`,
 		abnf.Literal("a", []byte("a")),
 		abnf.Literal("b", []byte("b")),
@@ -989,6 +1001,9 @@ func BenchmarkAlt(tb *testing.B) {
 }
 
 func BenchmarkConcat(b *testing.B) {
+	abnf.EnableNodeCache(0)
+	defer abnf.DisableNodeCache()
+
 	op := abnf.Concat(`"ab" "c"`, abnf.Literal("ab", []byte("ab")), abnf.Literal("c", []byte("c")))
 	in := []byte("abc")
 
@@ -1009,6 +1024,9 @@ func BenchmarkConcat(b *testing.B) {
 }
 
 func BenchmarkRepeat0Inf(b *testing.B) {
+	abnf.EnableNodeCache(0)
+	defer abnf.DisableNodeCache()
+
 	op := abnf.Repeat0Inf(`*"a"`, abnf.Literal("a", []byte("a")))
 	inputs := [][]byte{
 		[]byte(""),
@@ -1037,6 +1055,9 @@ func BenchmarkRepeat0Inf(b *testing.B) {
 }
 
 func BenchmarkCombo(b *testing.B) {
+	abnf.EnableNodeCache(0)
+	defer abnf.DisableNodeCache()
+
 	op := abnf.Repeat0Inf(`*([ "a" ] *2( "b" / "c" ))`,
 		abnf.Concat(`[ "a" ] *2( "b" / "c" )`,
 			abnf.Optional(`[ "a" ]`, abnf.Literal("a", []byte("a"))),
