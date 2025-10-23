@@ -40,3 +40,12 @@ release:
 	git tag -a $(VERSION) -m "Release $(VERSION)"
 	@echo "\nRelease $(VERSION) is ready to be pushed. Run the following command to publish:"
 	@echo "  git push --follow-tags"
+
+bench:
+	@if [ -z "$(PKG_PATH)" ] || [ "$(PKG_PATH)" = "..." ] ; then \
+		echo "Error: PKG_PATH is not set. Usage: make bench PKG_PATH=a/b/c" >&2; \
+		exit 1; \
+	fi
+	$(eval PREFIX := $(shell if [ "$(PKG_PATH)" = "." ]; then echo "abnf"; else echo "$(PKG_PATH)" | sed 's#/#_#g'; fi ))
+	echo $(PREFIX)
+	go test -vet=all -run=. -bench=. -benchmem -count=10 -memprofile=$(PREFIX)_mem.out -cpuprofile=$(PREFIX)_cpu.out ./$(PKG_PATH) | tee $(PREFIX)_bench.out
