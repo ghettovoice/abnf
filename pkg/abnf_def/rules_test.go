@@ -30,7 +30,7 @@ func TestRulesDescr_Rule(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ns.Clear()
-			if err := abnf_def.Rules().Rule([]byte(c.in), &ns); err != nil {
+			if err := abnf_def.Rules().Rule([]byte(c.in), ns); err != nil {
 				t.Fatalf("abnf_def.Rules().Rule(in, ns) error = %v, want nil", err)
 			}
 
@@ -61,7 +61,7 @@ func TestRulesDescr_Rulelist(t *testing.T) {
 			}
 
 			ns.Clear()
-			if err := abnf_def.Rules().Rulelist(in, &ns); err != nil {
+			if err := abnf_def.Rules().Rulelist(in, ns); err != nil {
 				t.Fatalf("abnf_def.Rules().Rulelist(in, nil) error = %v, want nil", err)
 			}
 
@@ -87,11 +87,11 @@ func BenchmarkRulesDescr_Rulelist(b *testing.B) {
 	b.ResetTimer()
 	for b.Loop() {
 		ns.Clear()
-		if err := abnf_def.Rules().Rulelist(in, &ns); err != nil {
+		if err := abnf_def.Rules().Rulelist(in, ns); err != nil {
 			b.Errorf("abnf_def.Rules().Rulelist(in, ns) error = %v, want nil", err)
 			continue
 		}
-		if len(ns) == 0 {
+		if ns.Len() == 0 {
 			b.Errorf("abnf_def.Rules().Rulelist(in, ns) = %+v, want not empty", ns)
 			continue
 		}

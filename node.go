@@ -70,7 +70,7 @@ func (n *Node) GetNodes(key string) Nodes {
 	if n.Key == key {
 		ns = append(ns, n)
 	}
-	ns = append(ns, n.Children.GetAll(key)...)
+	ns = append(ns, n.Children.AllByKey(key)...)
 	return ns
 }
 
@@ -155,16 +155,25 @@ func (ck *nodeCacheKey) free() {
 	nodeCacheKeyPool.Put(ck)
 }
 
-func (ck *nodeCacheKey) writeBase(key string, pos uint, len uint, input []byte) {
+func (ck *nodeCacheKey) writeBase(key string, pos, length uint, input []byte) {
 	ck.Write(unsafeStringToBytes(key))
 
 	binary.BigEndian.PutUint64(ck.buf[:], uint64(pos))
 	ck.Write(ck.buf[:])
 
-	binary.BigEndian.PutUint64(ck.buf[:], uint64(len))
+	binary.BigEndian.PutUint64(ck.buf[:], uint64(length))
 	ck.Write(ck.buf[:])
 
-	ck.Write(input)
+	if len(input) == 0 || length == 0 {
+		return
+	}
+
+	start := int(pos)
+	if start >= len(input) {
+		return
+	}
+	end := min(start+int(length), len(input))
+	ck.Write(input[start:end])
 }
 
 func (ck *nodeCacheKey) writeChildKeys(depth uint, ns ...*Node) {
@@ -229,9 +238,20 @@ func loadOrStoreNode(k *nodeCacheKey, newNode func() *Node) *Node {
 // Nodes represents a list of nodes.
 type Nodes []*Node
 
+func (ns *Nodes) Len() int {
+	if ns == nil {
+		return 0
+	}
+	return len(*ns)
+}
+
 // Contains returns whether the subtree contains the given key.
-func (ns Nodes) Contains(key string) bool {
-	for _, n := range ns {
+func (ns *Nodes) Contains(key string) bool {
+	if ns == nil {
+		return false
+	}
+
+	for _, n := range *ns {
 		if n.Key == key || n.Children.Contains(key) {
 			return true
 		}
@@ -240,8 +260,12 @@ func (ns Nodes) Contains(key string) bool {
 }
 
 // Get recursively searches a node with the given key.
-func (ns Nodes) Get(key string) (*Node, bool) {
-	for _, n := range ns {
+func (ns *Nodes) Get(key string) (*Node, bool) {
+	if ns == nil {
+		return nil, false
+	}
+
+	for _, n := range *ns {
 		if n.Key == key {
 			return n, true
 		}
@@ -252,26 +276,38 @@ func (ns Nodes) Get(key string) (*Node, bool) {
 	return nil, false
 }
 
+// All returns all nodes in the list.
+func (ns *Nodes) All() Nodes {
+	if ns == nil {
+		return nil
+	}
+	return *ns
+}
+
 // GetAll recursively searches all nodes with the given key.
-func (ns Nodes) GetAll(key string) Nodes {
+func (ns *Nodes) AllByKey(key string) Nodes {
+	if ns == nil {
+		return nil
+	}
+
 	var nodes Nodes
-	for _, n := range ns {
+	for _, n := range *ns {
 		if n.Key == key {
 			nodes = append(nodes, n)
 		}
-		nodes = append(nodes, n.Children.GetAll(key)...)
+		nodes = append(nodes, n.Children.AllByKey(key)...)
 	}
 	return nodes
 }
 
 // Best returns a node with the longest value or nil if the list is empty.
-func (ns Nodes) Best() *Node {
-	if len(ns) == 0 {
+func (ns *Nodes) Best() *Node {
+	if ns == nil || len(*ns) == 0 {
 		return nil
 	}
 
-	best := ns[0]
-	for _, n := range ns[1:] {
+	best := (*ns)[0]
+	for _, n := range (*ns)[1:] {
 		if n.Len() > best.Len() {
 			best = n
 		}
@@ -281,7 +317,10 @@ func (ns Nodes) Best() *Node {
 
 // Compare compares two best nodes.
 // The result will be 0 if a == b, -1 if a < b, and +1 if a > b where a - self best node, b - other best node.
-func (ns Nodes) Compare(other Nodes) int {
+func (ns *Nodes) Compare(other *Nodes) int {
+	if ns == nil || other == nil {
+		return 0
+	}
 	return ns.Best().Compare(other.Best())
 }
 
@@ -290,7 +329,7 @@ func (ns *Nodes) Append(n ...*Node) {
 }
 
 // NodesCap is a initial capacity of a new nodes list.
-var NodesCap = 100
+var NodesCap = 10
 
 var nodesPool = &sync.Pool{
 	New: func() any {
@@ -300,9 +339,8 @@ var nodesPool = &sync.Pool{
 }
 
 // NewNodes returns a new nodes list from the pool.
-func NewNodes() Nodes {
-	ns := nodesPool.Get().(*Nodes)
-	return *ns
+func NewNodes() *Nodes {
+	return nodesPool.Get().(*Nodes)
 }
 
 // Clear clears the nodes list.
@@ -325,3 +363,16 @@ func (ns *Nodes) Free() {
 
 	nodesPool.Put(ns)
 }
+
+type nodesSorter Nodes
+
+func (ns *nodesSorter) Len() int { return len(*ns) }
+
+func (ns *nodesSorter) Less(i, j int) bool {
+	return len((*ns)[i].Value) > len((*ns)[j].Value) ||
+		len((*ns)[i].Children) > len((*ns)[j].Children) ||
+		(*ns)[i].Pos < (*ns)[j].Pos ||
+		(*ns)[i].Key < (*ns)[j].Key
+}
+
+func (ns *nodesSorter) Swap(i, j int) { (*ns)[i], (*ns)[j] = (*ns)[j], (*ns)[i] }

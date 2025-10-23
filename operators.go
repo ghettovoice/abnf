@@ -22,18 +22,10 @@ func literal(key string, want []byte, ci bool) Operator {
 			}
 		}
 
-		ns.Append(
-			loadOrStoreNode(
-				newNodeCacheKey(key, pos, uint(len(got)), in),
-				func() *Node {
-					return &Node{
-						Key:   key,
-						Pos:   pos,
-						Value: got,
-					}
-				},
-			),
-		)
+		ns.Append(loadOrStoreNode(
+			newNodeCacheKey(key, pos, uint(len(got)), in),
+			func() *Node { return &Node{Key: key, Pos: pos, Value: got} },
+		))
 		return nil
 	}
 }
@@ -72,18 +64,10 @@ func Range(key string, low, high []byte) Operator {
 			return operError{key, pos, ErrNotMatched} //errtrace:skip
 		}
 
-		ns.Append(
-			loadOrStoreNode(
-				newNodeCacheKey(key, pos, uint(l), in),
-				func() *Node {
-					return &Node{
-						Key:   key,
-						Pos:   pos,
-						Value: in[pos : int(pos)+l],
-					}
-				},
-			),
-		)
+		ns.Append(loadOrStoreNode(
+			newNodeCacheKey(key, pos, uint(l), in),
+			func() *Node { return &Node{Key: key, Pos: pos, Value: in[pos : int(pos)+l]} },
+		))
 		return nil
 	}
 }
@@ -94,25 +78,28 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 		defer resns.Free()
 		defer subns.Free()
 
-		errs := newMultiErr(uint(len(ops) + 1))
+		var me *multiError
 		defer func() {
 			if finErr == nil {
-				errs.free()
+				me.free()
 			}
 		}()
 
 		runOp := func(op Operator) bool {
 			subns.Clear()
-			if err := op(in, pos, &subns); err != nil {
-				errs = append(errs, err)
+			if err := op(in, pos, subns); err != nil {
+				if me == nil {
+					me = newMultiErr(uint(len(ops) + 1))
+				}
+				*me = append(*me, err)
 				return true
 			}
 
-			for _, sn := range subns {
+			for _, sn := range subns.All() {
 				resns.Append(newAltNode(key, pos, sn, in))
 			}
 
-			return !fm || len(subns) == 0
+			return !fm || subns.Len() == 0
 		}
 
 		if runOp(op) {
@@ -123,16 +110,16 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 			}
 		}
 
-		if len(resns) > 0 {
-			if len(resns) > 1 {
-				sort.Sort(nodeSorter(resns))
+		if resns.Len() > 0 {
+			if resns.Len() > 1 {
+				sort.Sort((*nodesSorter)(resns))
 			}
-			ns.Append(resns...)
-			errs.clear()
+			ns.Append(resns.All()...)
+			me.clear()
 		}
 
-		if len(errs) > 0 {
-			return operError{key, pos, multiError(errs)} //errtrace:skip
+		if me != nil && len(*me) > 0 {
+			return operError{key, pos, *me} //errtrace:skip
 		}
 		return nil
 	}
@@ -143,11 +130,13 @@ func newAltNode(key string, pos uint, sn *Node, in []byte) *Node {
 	return loadOrStoreNode(
 		newNodeCacheKey(key, pos, uint(len(sn.Value)), in, sn),
 		func() *Node {
+			chns := make(Nodes, 1)
+			chns[0] = sn
 			return &Node{
 				Key:      key,
 				Pos:      pos,
 				Value:    in[pos : pos+uint(len(sn.Value))],
-				Children: append(NewNodes(), sn),
+				Children: chns,
 			}
 		},
 	)
@@ -180,35 +169,38 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 		defer newns.Free()
 		defer subns.Free()
 
-		errs := newMultiErr(uint(len(ops) + 1))
+		var me *multiError
 		defer func() {
 			if finErr == nil {
-				errs.free()
+				me.free()
 			}
 		}()
 
 		runOp := func(op Operator) bool {
 			newns.Clear()
 
-			for _, n := range resns {
+			for _, n := range resns.All() {
 				subns.Clear()
-				if err := op(in, n.Pos+uint(len(n.Value)), &subns); err != nil {
-					errs = append(errs, err)
+				if err := op(in, n.Pos+uint(len(n.Value)), subns); err != nil {
+					if me == nil {
+						me = newMultiErr(uint(len(ops) + 1))
+					}
+					*me = append(*me, err)
 					continue
 				}
 
-				for _, sn := range subns {
+				for _, sn := range subns.All() {
 					newns.Append(newConcatNode(key, n, sn, in))
 				}
 			}
 
-			if len(newns) == 0 {
+			if newns.Len() == 0 {
 				resns.Clear()
 				return false
 			}
 
 			resns, newns = newns, resns
-			errs.clear()
+			me.clear()
 			return true
 		}
 
@@ -220,17 +212,17 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 			}
 		}
 
-		if len(resns) > 0 {
-			if len(resns) > 1 && !all {
+		if resns.Len() > 0 {
+			if resns.Len() > 1 && !all {
 				ns.Append(resns.Best())
 			} else {
-				ns.Append(resns...)
+				ns.Append(resns.All()...)
 			}
-			errs.clear()
+			me.clear()
 		}
 
-		if len(errs) > 0 {
-			return operError{key, pos, multiError(errs)} //errtrace:skip
+		if me != nil && len(*me) > 0 {
+			return operError{key, pos, *me} //errtrace:skip
 		}
 		return nil
 	}
@@ -241,11 +233,14 @@ func newConcatNode(key string, n, sn *Node, in []byte) *Node {
 	ck := newNodeCacheKey(key, n.Pos, uint(len(n.Value)+len(sn.Value)), in, n.Children...)
 	ck.writeChildKeys(0, sn)
 	return loadOrStoreNode(ck, func() *Node {
+		chns := make(Nodes, len(n.Children)+1)
+		copy(chns, n.Children)
+		chns[len(n.Children)] = sn
 		return &Node{
 			Key:      key,
 			Pos:      n.Pos,
 			Value:    in[n.Pos : int(n.Pos)+len(n.Value)+len(sn.Value)],
-			Children: append(append(NewNodes(), n.Children...), sn),
+			Children: chns,
 		}
 	})
 }
@@ -286,7 +281,7 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 				newNodeCacheKey(key, pos, 0, in),
 				func() *Node { return &Node{Key: key, Pos: pos, Value: in[pos:pos]} },
 			))
-		} else if err := minOp(in, pos, &resns); err != nil {
+		} else if err := minOp(in, pos, resns); err != nil {
 			return operError{key, pos, err} //errtrace:skip
 		}
 
@@ -295,7 +290,7 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 		}
 
 		if max != 0 && min == max {
-			ns.Append(resns...)
+			ns.Append(resns.All()...)
 			return nil
 		}
 
@@ -304,35 +299,35 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 		defer newns.Free()
 		defer subns.Free()
 
-		curns.Append(resns...)
+		curns.Append(resns.All()...)
 
 		for i := min; i < max || max == 0; i++ {
 			newns.Clear()
 
-			for _, n := range curns {
+			for _, n := range curns.All() {
 				subns.Clear()
-				if err := op(in, n.Pos+uint(len(n.Value)), &subns); err != nil {
+				if err := op(in, n.Pos+uint(len(n.Value)), subns); err != nil {
 					// ignore errors, we already match min times
 					continue
 				}
 
-				for _, sn := range subns {
+				for _, sn := range subns.All() {
 					newns.Append(newConcatNode(key, n, sn, in))
 				}
 			}
 
-			if len(newns) == 0 || newns.Compare(curns) != 1 {
+			if newns.Len() == 0 || newns.Compare(curns) != 1 {
 				break
 			}
 
 			curns, newns = newns, curns
-			resns.Append(curns...)
+			resns.Append(curns.All()...)
 		}
 
-		if len(resns) > 1 {
-			sort.Sort(nodeSorter(resns))
+		if resns.Len() > 1 {
+			sort.Sort((*nodesSorter)(resns))
 		}
-		ns.Append(resns...)
+		ns.Append(resns.All()...)
 		return nil
 	}
 }
@@ -358,17 +353,3 @@ func Repeat1Inf(key string, op Operator) Operator {
 func Optional(key string, op Operator) Operator {
 	return Repeat(key, 0, 1, op)
 }
-
-// nodeSorter implements sort.Interface for sorting nodes by length, children count, position and key in descending order.
-type nodeSorter Nodes
-
-func (ns nodeSorter) Len() int { return len(ns) }
-
-func (ns nodeSorter) Less(i, j int) bool {
-	return len(ns[i].Value) > len(ns[j].Value) ||
-		len(ns[i].Children) > len(ns[j].Children) ||
-		ns[i].Pos < ns[j].Pos ||
-		ns[i].Key < ns[j].Key
-}
-
-func (ns nodeSorter) Swap(i, j int) { ns[i], ns[j] = ns[j], ns[i] }

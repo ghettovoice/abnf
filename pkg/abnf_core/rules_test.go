@@ -14,12 +14,12 @@ func TestRulesDescr_ALPHA(t *testing.T) {
 	cases := []struct {
 		name    string
 		in      []byte
-		wantNs  abnf.Nodes
+		wantNs  *abnf.Nodes
 		wantErr error
 	}{
 		{"lc letter",
 			[]byte("a"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "ALPHA",
 					Value: []byte("a"),
@@ -32,7 +32,7 @@ func TestRulesDescr_ALPHA(t *testing.T) {
 		},
 		{"uc letter",
 			[]byte("Z"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "ALPHA",
 					Value: []byte("Z"),
@@ -56,7 +56,7 @@ func TestRulesDescr_ALPHA(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ns.Clear()
-			err := abnf_core.Rules().ALPHA(c.in, &ns)
+			err := abnf_core.Rules().ALPHA(c.in, ns)
 			if c.wantErr == nil {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().ALPHA(%q, nil) error = %v, want nil", c.in, err)
@@ -84,12 +84,12 @@ func TestRulesDescr_BIT(t *testing.T) {
 	cases := []struct {
 		name    string
 		in      []byte
-		wantNs  abnf.Nodes
+		wantNs  *abnf.Nodes
 		wantErr error
 	}{
 		{"0",
 			[]byte("0"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "BIT",
 					Value: []byte("0"),
@@ -102,7 +102,7 @@ func TestRulesDescr_BIT(t *testing.T) {
 		},
 		{"1",
 			[]byte("1"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "BIT",
 					Value: []byte("1"),
@@ -126,7 +126,7 @@ func TestRulesDescr_BIT(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ns.Clear()
-			err := abnf_core.Rules().BIT(c.in, &ns)
+			err := abnf_core.Rules().BIT(c.in, ns)
 			if c.wantErr == nil {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().BIT(%q, nil) error = %v, want nil", c.in, err)
@@ -154,26 +154,26 @@ func TestRulesDescr_CHAR(t *testing.T) {
 	cases := []struct {
 		name    string
 		in      []byte
-		wantNs  abnf.Nodes
+		wantNs  *abnf.Nodes
 		wantErr error
 	}{
 		{"~",
 			[]byte("~"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{Key: "CHAR", Value: []byte("~")},
 			},
 			nil,
 		},
 		{"a",
 			[]byte("a"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{Key: "CHAR", Value: []byte("a")},
 			},
 			nil,
 		},
 		{"0",
 			[]byte("0"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{Key: "CHAR", Value: []byte("0")},
 			},
 			nil,
@@ -186,7 +186,7 @@ func TestRulesDescr_CHAR(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ns.Clear()
-			err := abnf_core.Rules().CHAR(c.in, &ns)
+			err := abnf_core.Rules().CHAR(c.in, ns)
 			if c.wantErr == nil {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().CHAR(%q, nil) error = %v, want nil", c.in, err)
@@ -214,12 +214,12 @@ func TestRulesDescr_CRLF(t *testing.T) {
 	cases := []struct {
 		name    string
 		in      []byte
-		wantNs  abnf.Nodes
+		wantNs  *abnf.Nodes
 		wantErr error
 	}{
 		{"crlf",
 			[]byte("\r\n"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "CRLF",
 					Value: []byte("\r\n"),
@@ -239,7 +239,7 @@ func TestRulesDescr_CRLF(t *testing.T) {
 		},
 		{"lf",
 			[]byte("\n"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "CRLF",
 					Value: []byte("\n"),
@@ -263,7 +263,7 @@ func TestRulesDescr_CRLF(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ns.Clear()
-			err := abnf_core.Rules().CRLF(c.in, &ns)
+			err := abnf_core.Rules().CRLF(c.in, ns)
 			if c.wantErr == nil {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().CRLF(%q, nil) error = %v, want nil", c.in, err)
@@ -291,12 +291,12 @@ func TestRulesDescr_CTL(t *testing.T) {
 	cases := []struct {
 		name    string
 		in      []byte
-		wantNs  abnf.Nodes
+		wantNs  *abnf.Nodes
 		wantErr error
 	}{
 		{"ctl",
 			[]byte("\u001B"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "CTL",
 					Value: []byte("\u001B"),
@@ -315,7 +315,7 @@ func TestRulesDescr_CTL(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ns.Clear()
-			err := abnf_core.Rules().CTL(c.in, &ns)
+			err := abnf_core.Rules().CTL(c.in, ns)
 			if c.wantErr == nil {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().CTL(%q, nil) error = %v, want nil", c.in, err)
@@ -343,12 +343,12 @@ func TestRulesDescr_DIGIT(t *testing.T) {
 	cases := []struct {
 		name    string
 		in      []byte
-		wantNs  abnf.Nodes
+		wantNs  *abnf.Nodes
 		wantErr error
 	}{
 		{"digit 0",
 			[]byte("0"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "DIGIT",
 					Value: []byte("0"),
@@ -358,7 +358,7 @@ func TestRulesDescr_DIGIT(t *testing.T) {
 		},
 		{"digit 9",
 			[]byte("9"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "DIGIT",
 					Value: []byte("9"),
@@ -379,7 +379,7 @@ func TestRulesDescr_DIGIT(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ns.Clear()
-			err := abnf_core.Rules().DIGIT(c.in, &ns)
+			err := abnf_core.Rules().DIGIT(c.in, ns)
 			if c.wantErr == nil {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().DIGIT(%q, nil) error = %v, want nil", c.in, err)
@@ -407,12 +407,12 @@ func TestRulesDescr_DQUOTE(t *testing.T) {
 	cases := []struct {
 		name    string
 		in      []byte
-		wantNs  abnf.Nodes
+		wantNs  *abnf.Nodes
 		wantErr error
 	}{
 		{"double quote",
 			[]byte("\""),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "DQUOTE",
 					Value: []byte("\""),
@@ -433,7 +433,7 @@ func TestRulesDescr_DQUOTE(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ns.Clear()
-			err := abnf_core.Rules().DQUOTE(c.in, &ns)
+			err := abnf_core.Rules().DQUOTE(c.in, ns)
 			if c.wantErr == nil {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().DQUOTE(%q, nil) error = %v, want nil", c.in, err)
@@ -461,12 +461,12 @@ func TestRulesDescr_HEXDIG(t *testing.T) {
 	cases := []struct {
 		name    string
 		in      []byte
-		wantNs  abnf.Nodes
+		wantNs  *abnf.Nodes
 		wantErr error
 	}{
 		{"hexdig 7",
 			[]byte("7"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "HEXDIG",
 					Value: []byte("7"),
@@ -479,7 +479,7 @@ func TestRulesDescr_HEXDIG(t *testing.T) {
 		},
 		{"hexdig A",
 			[]byte("A"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "HEXDIG",
 					Value: []byte("A"),
@@ -492,7 +492,7 @@ func TestRulesDescr_HEXDIG(t *testing.T) {
 		},
 		{"hexdig a",
 			[]byte("a"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "HEXDIG",
 					Value: []byte("a"),
@@ -516,7 +516,7 @@ func TestRulesDescr_HEXDIG(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ns.Clear()
-			err := abnf_core.Rules().HEXDIG(c.in, &ns)
+			err := abnf_core.Rules().HEXDIG(c.in, ns)
 			if c.wantErr == nil {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().HEXDIG(%q, nil) error = %v, want nil", c.in, err)
@@ -544,12 +544,12 @@ func TestRulesDescr_HTAB(t *testing.T) {
 	cases := []struct {
 		name    string
 		in      []byte
-		wantNs  abnf.Nodes
+		wantNs  *abnf.Nodes
 		wantErr error
 	}{
 		{"htab",
 			[]byte("\t"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "HTAB",
 					Value: []byte("\t"),
@@ -570,7 +570,7 @@ func TestRulesDescr_HTAB(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ns.Clear()
-			err := abnf_core.Rules().HTAB(c.in, &ns)
+			err := abnf_core.Rules().HTAB(c.in, ns)
 			if c.wantErr == nil {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().HTAB(%q, nil) error = %v, want nil", c.in, err)
@@ -598,12 +598,12 @@ func TestRulesDescr_LWSP(t *testing.T) {
 	cases := []struct {
 		name    string
 		in      []byte
-		wantNs  abnf.Nodes
+		wantNs  *abnf.Nodes
 		wantErr error
 	}{
 		{"space",
 			[]byte(" "),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "LWSP",
 					Value: []byte(" "),
@@ -629,7 +629,7 @@ func TestRulesDescr_LWSP(t *testing.T) {
 		},
 		{"crlf space",
 			[]byte("\n "),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "LWSP",
 					Value: []byte("\n "),
@@ -675,7 +675,7 @@ func TestRulesDescr_LWSP(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ns.Clear()
-			err := abnf_core.Rules().LWSP(c.in, &ns)
+			err := abnf_core.Rules().LWSP(c.in, ns)
 			if c.wantErr == nil {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().LWSP(%q, nil) error = %v, want nil", c.in, err)
@@ -703,12 +703,12 @@ func TestRulesDescr_OCTET(t *testing.T) {
 	cases := []struct {
 		name    string
 		in      []byte
-		wantNs  abnf.Nodes
+		wantNs  *abnf.Nodes
 		wantErr error
 	}{
 		{"o",
 			[]byte("o"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{Key: "OCTET", Value: []byte("o")},
 			},
 			nil,
@@ -721,7 +721,7 @@ func TestRulesDescr_OCTET(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ns.Clear()
-			err := abnf_core.Rules().OCTET(c.in, &ns)
+			err := abnf_core.Rules().OCTET(c.in, ns)
 			if c.wantErr == nil {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().OCTET(%q, nil) error = %v, want nil", c.in, err)
@@ -749,12 +749,12 @@ func TestRulesDescr_VCHAR(t *testing.T) {
 	cases := []struct {
 		name    string
 		in      []byte
-		wantNs  abnf.Nodes
+		wantNs  *abnf.Nodes
 		wantErr error
 	}{
 		{"vchar",
 			[]byte("`"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{Key: "VCHAR", Value: []byte("`")},
 			},
 			nil,
@@ -767,7 +767,7 @@ func TestRulesDescr_VCHAR(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ns.Clear()
-			err := abnf_core.Rules().VCHAR(c.in, &ns)
+			err := abnf_core.Rules().VCHAR(c.in, ns)
 			if c.wantErr == nil {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().VCHAR(%q, nil) error = %v, want nil", c.in, err)
@@ -795,12 +795,12 @@ func TestRulesDescr_WSP(t *testing.T) {
 	cases := []struct {
 		name    string
 		in      []byte
-		wantNs  abnf.Nodes
+		wantNs  *abnf.Nodes
 		wantErr error
 	}{
 		{"space",
 			[]byte(" "),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "WSP",
 					Value: []byte(" "),
@@ -813,7 +813,7 @@ func TestRulesDescr_WSP(t *testing.T) {
 		},
 		{"htab",
 			[]byte("\t"),
-			abnf.Nodes{
+			&abnf.Nodes{
 				{
 					Key:   "WSP",
 					Value: []byte("\t"),
@@ -832,7 +832,7 @@ func TestRulesDescr_WSP(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ns.Clear()
-			err := abnf_core.Rules().WSP(c.in, &ns)
+			err := abnf_core.Rules().WSP(c.in, ns)
 			if c.wantErr == nil {
 				if err != nil {
 					t.Fatalf("abnf_core.Rules().WSP(%q, nil) error = %v, want nil", c.in, err)
@@ -889,11 +889,11 @@ func BenchmarkToken(b *testing.B) {
 	b.ResetTimer()
 	for b.Loop() {
 		ns.Clear()
-		if err := token([]byte("!aaa.bbb+ccc"), 0, &ns); err != nil {
+		if err := token([]byte("!aaa.bbb+ccc"), 0, ns); err != nil {
 			b.Errorf("operator returned error %q, want nil", err)
 			continue
 		}
-		if len(ns) == 0 {
+		if ns.Len() == 0 {
 			b.Error("operator returned 0 nodes, want at least 1")
 		}
 	}

@@ -42,14 +42,14 @@ release:
 	@echo "  git push --follow-tags"
 
 bench:
-	@if [ -z "$(PKG)" ] || [ "$(PKG)" = "..." ] ; then \
+	@if [ -z "$(PKG)" ]; then \
 		echo "Error: PKG is not set. Usage: make bench PKG=a/b/c" >&2; \
 		exit 1; \
 	fi
-	$(eval PREFIX := $(shell if [ "$(PKG)" = "." ]; then echo "abnf"; else echo "$(PKG)" | sed 's#/#_#g'; fi ))
+	$(eval PREFIX := $(shell if [ "$(PKG)" = "..." ] || [ "$(PKG)" = "." ]; then echo "abnf_"; else echo "$(PKG)" | sed 's#/#_#g'; fi ))
 	$(eval SUFFIX := $(shell echo "_$(shell date +%Y%m%d%H%M%S)"))
-	go test -vet=all -run=. -bench=. -benchmem -count=10 \
-		-memprofile=$(PREFIX)_mem$(SUFFIX).out \
-		-cpuprofile=$(PREFIX)_cpu$(SUFFIX).out \
+	go test -vet=all -run=^$$ -bench=. -benchmem -count=10 \
+		-memprofile=$(PREFIX)mem$(SUFFIX).out \
+		-cpuprofile=$(PREFIX)cpu$(SUFFIX).out \
 		./$(PKG) \
-	| tee $(PREFIX)_bench$(SUFFIX).out
+	| tee $(PREFIX)bench$(SUFFIX).out
