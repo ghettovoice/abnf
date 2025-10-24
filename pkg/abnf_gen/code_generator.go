@@ -34,7 +34,7 @@ func (g *CodeGenerator) ReadFrom(src io.Reader) (int64, error) {
 	return errtrace.Wrap2(g.rulesParser.ReadFrom(src))
 }
 
-// WriteTo generates final Go sources and writes them to the dst.
+// WriteTo generates final Go sources and writes them to dst.
 func (g *CodeGenerator) WriteTo(dst io.Writer) (int64, error) {
 	if g.code.Len() == 0 {
 		f := jen.NewFile(g.PackageName)

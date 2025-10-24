@@ -5,7 +5,7 @@
 // code and parser generators are in [github.com/ghettovoice/abnf/pkg/abnf_gen].
 package abnf
 
-// VERSION is the package version
+// VERSION is the package version.
 const VERSION = "v0.6.0"
 
 // Rule is a function that implements an ABNF rule.

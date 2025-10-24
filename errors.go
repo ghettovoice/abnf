@@ -9,17 +9,19 @@ import (
 	"sync/atomic"
 )
 
-const (
-	// ErrNotMatched returned by operators if input doesn't match
-	ErrNotMatched sentinelError = "not matched"
-)
+// ErrNotMatched is returned by operators when input doesn't match.
+const ErrNotMatched sentinelError = "not matched"
 
 var detailErrs atomic.Bool
 
 // EnableDetailedErrors enables detailed operator errors.
+// Detailed errors provide more information about the error
+// including the operator key and position.
+// By default, detailed errors are disabled.
 func EnableDetailedErrors() { detailErrs.Store(true) }
 
 // DisableDetailedErrors disables detailed operator errors.
+// By default, detailed errors are disabled.
 func DisableDetailedErrors() { detailErrs.Store(false) }
 
 type sentinelError string
