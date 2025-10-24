@@ -864,15 +864,50 @@ func TestOperator(t *testing.T) {
 					)
 				}
 			} else {
-				// fmt.Printf("%+v\n", gotErr)
+				// fmt.Printf("%#v\n", err)
 				if !cmp.Equal(err, c.wantErr, cmpopts.EquateErrors()) {
-					t.Fatalf("op(in, 0, nil) error = %q, want %q\ndiff (-got +want):\n%v",
+					t.Fatalf("op(in, 0, nil) error = %v, want %q\ndiff (-got +want):\n%v",
 						err, c.wantErr,
 						cmp.Diff(err, c.wantErr, cmpopts.EquateErrors()),
 					)
 				}
 			}
 		})
+	}
+}
+
+func TestError(t *testing.T) {
+	abnf.EnableDetailedErrors()
+	defer abnf.DisableDetailedErrors()
+
+	op := abnf.Concat(`(("a" "b") / 2"c") ("a" / "b")`,
+		abnf.Alt(`("a" "b") / 2"c"`,
+			abnf.Concat(`"a" "b"`,
+				abnf.Literal("a", []byte("a")),
+				abnf.Literal("b", []byte("b")),
+			),
+			abnf.RepeatN(`2"c"`, 2, abnf.Literal("c", []byte("c"))),
+		),
+		abnf.Alt(`"a" / "b"`,
+			abnf.Literal("a", []byte("a")),
+			abnf.Literal("b", []byte("b")),
+		),
+	)
+
+	ns := abnf.NewNodes()
+	defer ns.Free()
+
+	want := `operator "((\"a\" \"b\") / 2\"c\") (\"a\" / \"b\")" failed at position 0:
+  - operator "\"a\" / \"b\"" failed at position 2:
+    - operator "a" failed at position 2: not matched
+    - operator "b" failed at position 2: not matched`
+	if err := op([]byte("ccc"), 0, ns); err == nil {
+		t.Errorf("op(in, 0, nil) error = nil, want %q", want)
+	} else if got := err.Error(); !cmp.Equal(got, want) {
+		t.Errorf("op(in, 0, nil) error = %q, want %q\ndiff (-got +want):\n%v",
+			got, want,
+			cmp.Diff(got, want),
+		)
 	}
 }
 
@@ -897,6 +932,7 @@ func BenchmarkLiteral(b *testing.B) {
 			b.Errorf("operator returned %d nodes, want 1", ns.Len())
 		}
 	}
+	// b.Logf("node cache stats: %+v", abnf.NodeCacheStats())
 }
 
 func BenchmarkLiteral_unicode(b *testing.B) {
@@ -920,6 +956,7 @@ func BenchmarkLiteral_unicode(b *testing.B) {
 			b.Errorf("operator returned %d nodes, want 1", ns.Len())
 		}
 	}
+	// b.Logf("node cache stats: %+v", abnf.NodeCacheStats())
 }
 
 func BenchmarkLiteralCS(b *testing.B) {
@@ -943,9 +980,13 @@ func BenchmarkLiteralCS(b *testing.B) {
 			b.Errorf("operator returned %d nodes, want 1", ns.Len())
 		}
 	}
+	// b.Logf("node cache stats: %+v", abnf.NodeCacheStats())
 }
 
 func BenchmarkRange(b *testing.B) {
+	abnf.EnableNodeCache(0)
+	defer abnf.DisableNodeCache()
+
 	op := abnf.Range("%x61-7A", []byte{97}, []byte{122})
 	in := []byte("zzz")
 
@@ -963,6 +1004,7 @@ func BenchmarkRange(b *testing.B) {
 			b.Errorf("operator returned %d nodes, want 1", ns.Len())
 		}
 	}
+	// b.Logf("node cache stats: %+v", abnf.NodeCacheStats())
 }
 
 func BenchmarkAlt(tb *testing.B) {
@@ -998,6 +1040,7 @@ func BenchmarkAlt(tb *testing.B) {
 			}
 		})
 	}
+	// b.Logf("node cache stats: %+v", abnf.NodeCacheStats())
 }
 
 func BenchmarkConcat(b *testing.B) {
@@ -1021,6 +1064,7 @@ func BenchmarkConcat(b *testing.B) {
 			b.Error("operator returned 0 nodes, want at least 1")
 		}
 	}
+	// b.Logf("node cache stats: %+v", abnf.NodeCacheStats())
 }
 
 func BenchmarkRepeat0Inf(b *testing.B) {
@@ -1052,6 +1096,7 @@ func BenchmarkRepeat0Inf(b *testing.B) {
 			}
 		})
 	}
+	// b.Logf("node cache stats: %+v", abnf.NodeCacheStats())
 }
 
 func BenchmarkCombo(b *testing.B) {
@@ -1069,6 +1114,7 @@ func BenchmarkCombo(b *testing.B) {
 			),
 		),
 	)
+	in := []byte("abc")
 
 	ns := abnf.NewNodes()
 	defer ns.Free()
@@ -1076,7 +1122,7 @@ func BenchmarkCombo(b *testing.B) {
 	b.ResetTimer()
 	for b.Loop() {
 		ns.Clear()
-		if err := op([]byte("abc"), 0, ns); err != nil {
+		if err := op(in, 0, ns); err != nil {
 			b.Errorf("operator returned error %q, want nil", err)
 			continue
 		}
@@ -1084,9 +1130,14 @@ func BenchmarkCombo(b *testing.B) {
 			b.Error("operator returned 0 nodes, want at least 1")
 		}
 	}
+	// b.Logf("node cache stats: %+v", abnf.NodeCacheStats())
 }
 
 func ExampleConcat() {
+	// Enable node cache to re-use nodes
+	abnf.EnableNodeCache(0)
+	defer abnf.DisableNodeCache()
+
 	op := abnf.Concat(
 		`"a" "b" *"cd"`,
 		abnf.Literal(`"a"`, []byte("a")),

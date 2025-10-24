@@ -87,7 +87,11 @@ func (n *Node) Compare(other *Node) int {
 	return bytes.Compare(n.Value, other.Value)
 }
 
-var nodeCache atomic.Pointer[lru.Cache[uint64, *Node]]
+var (
+	nodeCache atomic.Pointer[lru.Cache[uint64, *Node]]
+	cacheHit,
+	cacheMiss atomic.Uint64
+)
 
 // EnableNodeCache initializes the node cache.
 // If size is 0, it will be set to 1024.
@@ -127,7 +131,17 @@ func ResizeNodeCache(size uint) {
 func DisableNodeCache() {
 	if cache := nodeCache.Swap(nil); cache != nil {
 		cache.Purge()
+		cacheHit.Store(0)
+		cacheMiss.Store(0)
 	}
+}
+
+func NodeCacheStats() struct{ hit, miss, size uint64 } {
+	var size uint64
+	if cache := nodeCache.Load(); cache != nil {
+		size = uint64(cache.Len())
+	}
+	return struct{ hit, miss, size uint64 }{cacheHit.Load(), cacheMiss.Load(), size}
 }
 
 type nodeCacheKey struct {
@@ -204,8 +218,10 @@ func loadNode(k *nodeCacheKey) (*Node, bool) {
 
 	n, ok := cache.Get(k.hash())
 	if !ok {
+		cacheMiss.Add(1)
 		return nil, false
 	}
+	cacheHit.Add(1)
 	return n, true
 }
 

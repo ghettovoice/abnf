@@ -1,16 +1,26 @@
 package abnf
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 )
 
 const (
 	// ErrNotMatched returned by operators if input doesn't match
 	ErrNotMatched sentinelError = "not matched"
 )
+
+var detailErrs atomic.Bool
+
+// EnableDetailedErrors enables detailed operator errors.
+func EnableDetailedErrors() { detailErrs.Store(true) }
+
+// DisableDetailedErrors disables detailed operator errors.
+func DisableDetailedErrors() { detailErrs.Store(false) }
 
 type sentinelError string
 
@@ -25,53 +35,69 @@ type operError struct {
 func (e operError) Unwrap() error { return e.err }
 
 func (e operError) Error() string {
-	var sb strings.Builder
-	e.writeError(&sb, 0)
+	sb := bytes.NewBuffer(make([]byte, 0, 128))
+	e.writeError(sb, 0)
 	return sb.String()
 }
 
-func (e *operError) writeError(sb *strings.Builder, depth int) {
-	fmt.Fprintf(sb, "operator %q failed at position %d: ", e.op, e.pos)
+func (e operError) writeError(sb *bytes.Buffer, depth int) {
+	fmt.Fprintf(sb, "operator %q failed at position %d:", e.op, e.pos)
 
-	var merr multiError
+	var merr *multiError
 	if errors.As(e.err, &merr) {
 		merr.writeError(sb, depth)
 	} else {
+		sb.WriteString(" ")
 		sb.WriteString(e.err.Error())
 	}
 }
 
 type multiError []error
 
-func (e multiError) Unwrap() []error { return e }
+func (e *multiError) Unwrap() []error {
+	if e == nil {
+		return nil
+	}
+	return *e
+}
 
-func (e multiError) Error() string {
-	var sb strings.Builder
-	e.writeError(&sb, 0)
+func (e *multiError) Error() string {
+	if e == nil {
+		return "<nil>"
+	}
+
+	sb := bytes.NewBuffer(make([]byte, 0, 128))
+	e.writeError(sb, 0)
 	return sb.String()
 }
 
-func (e multiError) writeError(sb *strings.Builder, depth int) {
-	sb.WriteString("following errors are occurred:\n")
+func (e *multiError) writeError(sb *bytes.Buffer, depth int) {
+	sb.WriteString("\n")
 
-	for _, err := range e {
-		var (
-			merr multiError
-			oerr *operError
-		)
-		if errors.As(err, &oerr) {
-			sb.WriteString(strings.Repeat("  ", depth+1) + "- ")
-			oerr.writeError(sb, depth+1)
+	for i, err := range *e {
+		if i > 0 {
 			sb.WriteString("\n")
-		} else if errors.As(err, &merr) {
-			merr.writeError(sb, depth+1)
+		}
+
+		var (
+			me *multiError
+			oe operError
+		)
+		if errors.As(err, &oe) {
+			sb.WriteString(strings.Repeat("  ", depth+1))
+			sb.WriteString("- ")
+			oe.writeError(sb, depth+1)
+		} else if errors.As(err, &me) {
+			me.writeError(sb, depth+1)
 		} else {
-			sb.WriteString(strings.Repeat("  ", depth+1) + "- " + err.Error() + "\n")
+			sb.WriteString(strings.Repeat("  ", depth+1))
+			sb.WriteString("- ")
+			sb.WriteString(err.Error())
 		}
 	}
 }
 
-const multiErrCap = 10
+const multiErrCap = 3
 
 var multiErrPool = &sync.Pool{
 	New: func() any {
@@ -107,4 +133,36 @@ func (e *multiError) free() {
 
 	e.clear()
 	multiErrPool.Put(e)
+}
+
+func wrapOperError(op string, pos uint, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if !detailErrs.Load() {
+		if errors.Is(err, ErrNotMatched) {
+			if me, ok := err.(*multiError); ok {
+				me.free()
+			}
+			if oe, ok := err.(operError); ok {
+				if me, ok := oe.err.(*multiError); ok {
+					me.free()
+				}
+			}
+			return ErrNotMatched
+		}
+		return err
+	}
+
+	var oerr operError
+	if errors.As(err, &oerr) && oerr.op == op && oerr.pos == pos {
+		return err
+	}
+
+	return operError{op: op, pos: pos, err: err}
+}
+
+func wrapNotMatched(op string, pos uint) error {
+	return wrapOperError(op, pos, ErrNotMatched)
 }
