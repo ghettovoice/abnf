@@ -12,13 +12,13 @@ type Operator = func(in []byte, pos uint, ns *Nodes) error
 func literal(key string, want []byte, ci bool) Operator {
 	return func(in []byte, pos uint, ns *Nodes) error {
 		if len(in[pos:]) < len(want) {
-			return operError{key, pos, ErrNotMatched} //errtrace:skip
+			return wrapNotMatched(key, pos)
 		}
 
 		got := in[pos : int(pos)+len(want)]
 		if !bytes.Equal(got, want) {
 			if !ci || !bytes.Equal(toLower(want), toLower(got)) {
-				return operError{key, pos, ErrNotMatched} //errtrace:skip
+				return wrapNotMatched(key, pos)
 			}
 		}
 
@@ -47,7 +47,7 @@ func LiteralCS(key string, val []byte) Operator {
 func Range(key string, low, high []byte) Operator {
 	return func(in []byte, pos uint, ns *Nodes) error {
 		if len(in[pos:]) < len(low) || bytes.Compare(in[pos:int(pos)+len(low)], low) < 0 {
-			return operError{key, pos, ErrNotMatched} //errtrace:skip
+			return wrapNotMatched(key, pos)
 		}
 
 		var l int
@@ -85,29 +85,43 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 			}
 		}()
 
-		runOp := func(op Operator) bool {
+		var (
+			i int
+			o Operator
+		)
+		for {
+			if i == 0 {
+				o = op
+			} else {
+				o = ops[i-1]
+			}
+
 			subns.Clear()
-			if err := op(in, pos, subns); err != nil {
+			if err := o(in, pos, subns); err != nil {
 				if me == nil {
 					me = newMultiErr(uint(len(ops) + 1))
 				}
 				*me = append(*me, err)
-				return true
+
+				if i == len(ops) {
+					break
+				}
+				i++
+				continue
 			}
 
 			for _, sn := range subns.All() {
 				resns.Append(newAltNode(key, pos, sn, in))
 			}
 
-			return !fm || subns.Len() == 0
-		}
-
-		if runOp(op) {
-			for _, op := range ops {
-				if !runOp(op) {
-					break
-				}
+			if fm && subns.Len() > 0 {
+				break
 			}
+
+			if i == len(ops) {
+				break
+			}
+			i++
 		}
 
 		if resns.Len() > 0 {
@@ -119,7 +133,7 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 		}
 
 		if me != nil && len(*me) > 0 {
-			return operError{key, pos, *me} //errtrace:skip
+			return wrapOperError(key, pos, me) //errtrace:skip
 		}
 		return nil
 	}
@@ -176,12 +190,21 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 			}
 		}()
 
-		runOp := func(op Operator) bool {
-			newns.Clear()
+		var (
+			i int
+			o Operator
+		)
+		for {
+			if i == 0 {
+				o = op
+			} else {
+				o = ops[i-1]
+			}
 
+			newns.Clear()
 			for _, n := range resns.All() {
 				subns.Clear()
-				if err := op(in, n.Pos+uint(len(n.Value)), subns); err != nil {
+				if err := o(in, n.Pos+uint(len(n.Value)), subns); err != nil {
 					if me == nil {
 						me = newMultiErr(uint(len(ops) + 1))
 					}
@@ -196,20 +219,16 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 
 			if newns.Len() == 0 {
 				resns.Clear()
-				return false
+				break
 			}
 
 			resns, newns = newns, resns
 			me.clear()
-			return true
-		}
 
-		if runOp(op) {
-			for _, op := range ops {
-				if !runOp(op) {
-					break
-				}
+			if i == len(ops) {
+				break
 			}
+			i++
 		}
 
 		if resns.Len() > 0 {
@@ -222,7 +241,7 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 		}
 
 		if me != nil && len(*me) > 0 {
-			return operError{key, pos, *me} //errtrace:skip
+			return wrapOperError(key, pos, me) //errtrace:skip
 		}
 		return nil
 	}
@@ -282,7 +301,7 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 				func() *Node { return &Node{Key: key, Pos: pos, Value: in[pos:pos]} },
 			))
 		} else if err := minOp(in, pos, resns); err != nil {
-			return operError{key, pos, err} //errtrace:skip
+			return wrapOperError(key, pos, err) //errtrace:skip
 		}
 
 		if 0 < max && max < min {
@@ -303,7 +322,6 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 
 		for i := min; i < max || max == 0; i++ {
 			newns.Clear()
-
 			for _, n := range curns.All() {
 				subns.Clear()
 				if err := op(in, n.Pos+uint(len(n.Value)), subns); err != nil {

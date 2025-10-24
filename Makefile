@@ -41,12 +41,9 @@ release:
 	@echo "\nRelease $(VERSION) is ready to be pushed. Run the following command to publish:"
 	@echo "  git push --follow-tags"
 
+bench: PKG=
 bench:
-	@if [ -z "$(PKG)" ]; then \
-		echo "Error: PKG is not set. Usage: make bench PKG=a/b/c" >&2; \
-		exit 1; \
-	fi
-	$(eval PREFIX := $(shell if [ "$(PKG)" = "..." ] || [ "$(PKG)" = "." ]; then echo "abnf_"; else echo "$(PKG)" | sed 's#/#_#g'; fi ))
+	$(eval PREFIX := $(shell if [ "$(PKG)" = "..." ] || [ "$(PKG)" = "." ] || [ "$(PKG)" = "" ]; then echo "abnf_"; else echo "$(PKG)" | sed 's#/#_#g'; fi ))
 	$(eval SUFFIX := $(shell echo "_$(shell date +%Y%m%d%H%M%S)"))
 	go test -vet=all -run=^$$ -bench=. -benchmem -count=10 \
 		-memprofile=$(PREFIX)mem$(SUFFIX).out \
