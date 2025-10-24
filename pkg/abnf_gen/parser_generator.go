@@ -38,6 +38,7 @@ func (g *ParserGenerator) Operators() map[string]abnf.Operator {
 	return g.oprts
 }
 
+// Rules returns a map of ABNF rules as functions that start parsing from position 0.
 func (g *ParserGenerator) Rules() map[string]abnf.Rule {
 	if len(g.rules) == 0 {
 		oprts := g.Operators()
