@@ -1,44 +1,60 @@
-# abnf CLI tool
+# abnf CLI
 
-`abnf` provides Go code generation from ABNF files.
+`abnf` is a command-line interface for turning `.abnf` grammar files into Go packages. It scaffolds configuration, resolves dependencies, and emits idiomatic Go code that uses the core `github.com/ghettovoice/abnf` operators.
 
-## Install
+## Table of Contents
+
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Configuration](#configuration)
+- [Commands](#commands)
+- [Examples](#examples)
+
+## Installation
 
 ```bash
 go install github.com/ghettovoice/abnf/cmd/abnf@latest
 ```
 
-## Usage
+Upgrade at any time with the same command.
 
-Read help about available commands and their arguments:
-
-```bash
-abnf -h
-abnf help [command]
-```
-
-First we need to generate basic config:
+## Quick Start
 
 ```bash
-abnf config ./config.yaml
+# create a starter config next to your grammar files
+abnf config ./grammar.yml
+
+# edit grammar.yml to point to your ABNF files and output package
+
+# generate Go sources
+abnf generate -c ./grammar.yml
 ```
 
-Then update config options:
+Use `abnf -h` to see global flags and `abnf help <command>` for command-specific options.
 
-- `inputs`: list of ABNF files to parse relative to the config file location
-- `package`: name of the generated package
-- `output`: path to the generated Go file relative to the config file location
-- `wrap_errs`: whether to wrap errors in rules/operators with `braces.dev/errtrace`
-- `external`: list of external ABNF rules used in inputs. Each external rule has the following fields:
-  - `path`: Go package import path
-  - `name`: Go package name
-  - `rules`: list of ABNF rule names, i.e. function names
+## Configuration
 
-Now with the config file ready, we can generate the code:
+The generated YAML config contains the following fields:
 
-```bash
-abnf generate ./config.yaml
-```
+| Field | Description |
+|-------|-------------|
+| `inputs` | List of ABNF files to parse (paths are relative to the config file). |
+| `package` | Package name for the generated Go code. |
+| `output` | Destination Go file path (relative to the config file). |
+| `external` | Optional list of external rule providers, each with `path`, `name`, and `rules`. |
 
-As example of config file and generated code, check [abnf_core](https://github.com/ghettovoice/abnf/tree/master/pkg/abnf_core)
-and [abnf_def](https://github.com/ghettovoice/abnf/tree/master/pkg/abnf_def) directories.
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `abnf config [path]` | Writes a starter configuration file. Defaults to `./abnf.yml`. |
+| `abnf generate --config <path>` | Generates Go sources per the configuration. |
+| `abnf version` | Prints the CLI version (mirrors library `VERSION`). |
+| `abnf help` | Prints help for a command. |
+
+Global flags include `--verbose` for additional logging and `--y` to skip overwrite prompts.
+
+## Examples
+
+- Core ABNF rules generated with this CLI live in [`pkg/abnf_core`](../../pkg/abnf_core).
+- The definition grammar generated with this CLI lives in [`pkg/abnf_def`](../../pkg/abnf_def).
