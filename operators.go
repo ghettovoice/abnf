@@ -61,7 +61,7 @@ func Range(key string, low, high []byte) Operator {
 		}
 
 		if l == 0 {
-			return operError{key, pos, ErrNotMatched} //errtrace:skip
+			return wrapNotMatched(key, pos) //errtrace:skip
 		}
 
 		ns.Append(loadOrStoreNode(
