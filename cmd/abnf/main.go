@@ -18,24 +18,24 @@ import (
 func main() {
 	cmd := &cli.Command{
 		Name:                  "abnf",
-		Usage:                 "Generates parsers from ABNF grammar (RFC 5234, RFC 7405)",
+		Usage:                 "generates parsers from ABNF grammar (RFC 5234, RFC 7405)",
 		EnableShellCompletion: true,
 		Suggest:               true,
 		Commands: []*cli.Command{
 			{
 				Name:    "version",
 				Aliases: []string{"ver"},
-				Usage:   "Shows version information",
+				Usage:   "shows version information",
 				Action:  versionAction,
 			},
 			{
 				Name:    "config",
 				Aliases: []string{"conf"},
-				Usage:   "Generates YML config",
+				Usage:   "generates YML config",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:  "y",
-						Usage: "Forces config file overwriting",
+						Usage: "forces config file overwriting",
 					},
 				},
 				ArgsUsage: "[path]",
@@ -44,26 +44,28 @@ func main() {
 			{
 				Name:    "generate",
 				Aliases: []string{"gen"},
-				Usage:   "Generates Go sources from ABNF rules",
+				Usage:   "generates Go sources from ABNF rules",
 				Flags: []cli.Flag{
+					// TODO: remove later
 					&cli.StringFlag{
 						Name:    "config",
 						Aliases: []string{"conf", "c"},
-						Usage:   "Path to the YML config file. Takes abnf.yml in the current directory by default.",
+						Usage:   "[DEPRECATED] path to the YML config file. takes abnf.yml in the current directory by default",
 					},
 					&cli.BoolFlag{
 						Name:  "y",
-						Usage: "Forces output Go file overwriting",
+						Usage: "forces output Go file overwriting",
 					},
 				},
-				Action: generateAction,
+				ArgsUsage: "[path]",
+				Action:    generateAction,
 			},
 		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:    "verbose",
 				Aliases: []string{"v"},
-				Usage:   "Enables verbose output",
+				Usage:   "enables verbose output",
 			},
 		},
 		Authors: []any{
@@ -148,7 +150,11 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 
 	// read config
 	confPath := defaultConfPath
-	if v := cmd.String("config"); len(v) > 0 {
+	if cmd.Args().Len() > 0 {
+		if v := strings.TrimSpace(cmd.Args().First()); v != "" {
+			confPath = v
+		}
+	} else if v := cmd.String("config"); len(v) > 0 {
 		confPath = v
 	}
 	confPath = makePath(confPath, wd)
