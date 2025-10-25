@@ -78,9 +78,13 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 		defer resns.Free()
 		defer subns.Free()
 
-		var me *multiError
+		detail := detailErrs.Load()
+		var (
+			me      *multiError
+			lastErr error
+		)
 		defer func() {
-			if finErr == nil {
+			if detail && finErr == nil {
 				me.free()
 			}
 		}()
@@ -98,10 +102,14 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 
 			subns.Clear()
 			if err := o(in, pos, subns); err != nil {
-				if me == nil {
-					me = newMultiErr(uint(len(ops) + 1))
+				if detail {
+					if me == nil {
+						me = newMultiErr(uint(len(ops) + 1))
+					}
+					*me = append(*me, err)
+				} else {
+					lastErr = err
 				}
-				*me = append(*me, err)
 
 				if i == len(ops) {
 					break
@@ -113,6 +121,7 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 			for _, sn := range subns.All() {
 				resns.Append(newAltNode(key, pos, sn, in))
 			}
+			lastErr = nil
 
 			if fm && subns.Len() > 0 {
 				break
@@ -129,11 +138,19 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 				sort.Sort((*nodesSorter)(resns))
 			}
 			ns.Append(resns.All()...)
-			me.clear()
+			if detail {
+				me.clear()
+			} else {
+				lastErr = nil
+			}
 		}
 
-		if me != nil && len(*me) > 0 {
-			return wrapOperError(key, pos, me) //errtrace:skip
+		if detail {
+			if me != nil && len(*me) > 0 {
+				return wrapOperError(key, pos, me) //errtrace:skip
+			}
+		} else if lastErr != nil {
+			return wrapOperError(key, pos, lastErr) //errtrace:skip
 		}
 		return nil
 	}
@@ -183,9 +200,13 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 		defer newns.Free()
 		defer subns.Free()
 
-		var me *multiError
+		detail := detailErrs.Load()
+		var (
+			me      *multiError
+			lastErr error
+		)
 		defer func() {
-			if finErr == nil {
+			if detail && finErr == nil {
 				me.free()
 			}
 		}()
@@ -205,10 +226,14 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 			for _, n := range resns.All() {
 				subns.Clear()
 				if err := o(in, n.Pos+uint(len(n.Value)), subns); err != nil {
-					if me == nil {
-						me = newMultiErr(uint(len(ops) + 1))
+					if detail {
+						if me == nil {
+							me = newMultiErr(uint(len(ops) + 1))
+						}
+						*me = append(*me, err)
+					} else {
+						lastErr = err
 					}
-					*me = append(*me, err)
 					continue
 				}
 
@@ -223,7 +248,11 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 			}
 
 			resns, newns = newns, resns
-			me.clear()
+			if detail {
+				me.clear()
+			} else {
+				lastErr = nil
+			}
 
 			if i == len(ops) {
 				break
@@ -237,11 +266,19 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 			} else {
 				ns.Append(resns.All()...)
 			}
-			me.clear()
+			if detail {
+				me.clear()
+			} else {
+				lastErr = nil
+			}
 		}
 
-		if me != nil && len(*me) > 0 {
-			return wrapOperError(key, pos, me) //errtrace:skip
+		if detail {
+			if me != nil && len(*me) > 0 {
+				return wrapOperError(key, pos, me) //errtrace:skip
+			}
+		} else if lastErr != nil {
+			return wrapOperError(key, pos, lastErr) //errtrace:skip
 		}
 		return nil
 	}
