@@ -38,7 +38,7 @@ func main() {
 If you tweak `rules.abnf`, align the generated Go files by running:
 
 ```bash
-abnf generate -c ./abnf.yml
+abnf generate ./abnf.yml
 ```
 
 The `abnf.yml` configuration under this directory documents the exact inputs and output paths used.

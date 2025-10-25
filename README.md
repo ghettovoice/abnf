@@ -92,7 +92,7 @@ The [`abnf` CLI](./cmd/abnf/README.md) scaffolds configs and generates Go code f
 
 1. Generate a starter config: `abnf config ./grammar.yml`
 2. Update the YAML with your grammar files and output options.
-3. Run `abnf generate -c ./grammar.yml` to emit ready-to-use Go sources.
+3. Run `abnf generate ./grammar.yml` to emit ready-to-use Go sources.
 
 ## Contributing
 
