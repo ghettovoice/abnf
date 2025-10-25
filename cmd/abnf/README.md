@@ -27,7 +27,7 @@ abnf config ./grammar.yml
 # edit grammar.yml to point to your ABNF files and output package
 
 # generate Go sources
-abnf generate -c ./grammar.yml
+abnf generate ./grammar.yml
 ```
 
 Use `abnf -h` to see global flags and `abnf help <command>` for command-specific options.
@@ -48,7 +48,7 @@ The generated YAML config contains the following fields:
 | Command | Description |
 |---------|-------------|
 | `abnf config [path]` | Writes a starter configuration file. Defaults to `./abnf.yml`. |
-| `abnf generate --config <path>` | Generates Go sources per the configuration. |
+| `abnf generate [path]` | Generates Go sources per the configuration. |
 | `abnf version` | Prints the CLI version (mirrors library `VERSION`). |
 | `abnf help` | Prints help for a command. |
 

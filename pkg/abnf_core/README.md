@@ -38,7 +38,7 @@ func main() {
 If you modify `rules.abnf`, regenerate this package to keep the Go sources in sync:
 
 ```bash
-abnf generate -c ./abnf.yml
+abnf generate ./abnf.yml
 ```
 
 The `abnf.yml` configuration under this directory documents the exact inputs and output paths used.
