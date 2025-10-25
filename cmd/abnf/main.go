@@ -155,6 +155,7 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 			confPath = v
 		}
 	} else if v := cmd.String("config"); len(v) > 0 {
+		fmt.Println("Warning: --config flag is deprecated, consider use [path] argument")
 		confPath = v
 	}
 	confPath = makePath(confPath, wd)
