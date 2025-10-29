@@ -137,7 +137,9 @@ external:
 		return cli.Exit(fmt.Errorf("write config file: %w", err), 1) //errtrace:skip
 	}
 
-	fmt.Printf("config written to file %s\n", confPath)
+	if cmd.Bool("verbose") {
+		fmt.Printf("config written to file %s\n", confPath)
+	}
 
 	return nil
 }
@@ -170,7 +172,9 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 		return cli.Exit(err, 1) //errtrace:skip
 	}
 
-	fmt.Printf("config file %s loaded\n", confPath)
+	if cmd.Bool("verbose") {
+		fmt.Printf("config file %s loaded\n", confPath)
+	}
 
 	// setup CodeGenerator
 	var errs []error
@@ -219,7 +223,9 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 
 		fd.Close()
 
-		fmt.Printf("ABNF file %s parsed\n", in)
+		if cmd.Bool("verbose") {
+			fmt.Printf("ABNF file %s parsed\n", in)
+		}
 	}
 	if len(errs) > 0 {
 		return cli.Exit(errors.Join(errs...), 1) //errtrace:skip
@@ -257,7 +263,9 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 		return cli.Exit(fmt.Errorf("write generated code to file %s: %w", outPath, err), 1) //errtrace:skip
 	}
 
-	fmt.Printf("generated code written to file %s\n", outPath)
+	if cmd.Bool("verbose") {
+		fmt.Printf("generated code written to file %s\n", outPath)
+	}
 
 	return nil
 }
