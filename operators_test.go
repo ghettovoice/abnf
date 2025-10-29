@@ -1148,22 +1148,17 @@ func ExampleConcat() {
 	ns := abnf.NewNodes()
 	defer ns.Free()
 
-	if err := op([]byte("ab"), 0, ns); err != nil {
-		panic(err)
+	for _, in := range [][]byte{
+		[]byte("ab"),
+		[]byte("abcd"),
+		[]byte("abcdcd"),
+	} {
+		ns.Clear()
+		if err := op(in, 0, ns); err != nil {
+			panic(err)
+		}
+		fmt.Println(ns.Best())
 	}
-	fmt.Println(ns.Best())
-
-	ns.Clear()
-	if err := op([]byte("abcd"), 0, ns); err != nil {
-		panic(err)
-	}
-	fmt.Println(ns.Best())
-
-	ns.Clear()
-	if err := op([]byte("abcdcd"), 0, ns); err != nil {
-		panic(err)
-	}
-	fmt.Println(ns.Best())
 
 	// Output:
 	// ab
