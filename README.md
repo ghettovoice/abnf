@@ -107,3 +107,5 @@ make bench
 ## License
 
 Distributed under the MIT License. See [LICENSE](./LICENSE) for details.
+
+Third-party dependencies are listed in [THIRD-PARTY-LICENSES.md](./THIRD-PARTY-LICENSES.md).
