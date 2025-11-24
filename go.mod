@@ -7,7 +7,7 @@ require (
 	github.com/dave/jennifer v1.7.1
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
-	github.com/urfave/cli/v3 v3.6.0
+	github.com/urfave/cli/v3 v3.6.1
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/gofumpt v0.9.2
 )
