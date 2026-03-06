@@ -61,7 +61,7 @@ func Range(key string, low, high []byte) Operator {
 		}
 
 		if l == 0 {
-			return wrapNotMatched(key, pos) //errtrace:skip
+			return wrapNotMatched(key, pos)
 		}
 
 		ns.Append(loadOrStoreNode(
@@ -147,10 +147,10 @@ func alt(key string, fm bool, op Operator, ops ...Operator) Operator {
 
 		if detail {
 			if me != nil && len(*me) > 0 {
-				return wrapOperError(key, pos, me) //errtrace:skip
+				return wrapOperError(key, pos, me)
 			}
 		} else if lastErr != nil {
-			return wrapOperError(key, pos, lastErr) //errtrace:skip
+			return wrapOperError(key, pos, lastErr)
 		}
 		return nil
 	}
@@ -275,10 +275,10 @@ func concat(key string, all bool, op Operator, ops ...Operator) Operator {
 
 		if detail {
 			if me != nil && len(*me) > 0 {
-				return wrapOperError(key, pos, me) //errtrace:skip
+				return wrapOperError(key, pos, me)
 			}
 		} else if lastErr != nil {
-			return wrapOperError(key, pos, lastErr) //errtrace:skip
+			return wrapOperError(key, pos, lastErr)
 		}
 		return nil
 	}
@@ -338,7 +338,7 @@ func Repeat(key string, min, max uint, op Operator) Operator {
 				func() *Node { return &Node{Key: key, Pos: pos, Value: in[pos:pos]} },
 			))
 		} else if err := minOp(in, pos, resns); err != nil {
-			return wrapOperError(key, pos, err) //errtrace:skip
+			return wrapOperError(key, pos, err)
 		}
 
 		if 0 < max && max < min {

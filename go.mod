@@ -3,7 +3,6 @@ module github.com/ghettovoice/abnf
 go 1.24.0
 
 require (
-	braces.dev/errtrace v0.4.0
 	github.com/dave/jennifer v1.7.1
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7

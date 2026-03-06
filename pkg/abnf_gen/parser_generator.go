@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 
-	"braces.dev/errtrace"
 	"github.com/ghettovoice/abnf"
 )
 
@@ -22,7 +21,7 @@ type ParserGenerator struct {
 // ReadFrom reads and parses ABNF grammar from src.
 func (g *ParserGenerator) ReadFrom(src io.Reader) (int64, error) {
 	clear(g.oprts)
-	return errtrace.Wrap2(g.rulesParser.ReadFrom(src))
+	return g.rulesParser.ReadFrom(src)
 }
 
 // Operators returns a map of ABNF rules as operator functions.
@@ -47,7 +46,7 @@ func (g *ParserGenerator) Rules() map[string]abnf.Rule {
 		}
 		for n, op := range oprts {
 			g.rules[n] = func(in []byte, ns *abnf.Nodes) error {
-				return op(in, 0, ns) //errtrace:skip
+				return op(in, 0, ns)
 			}
 		}
 	}
@@ -125,7 +124,7 @@ func (op ruleNameOperator) buildOprt(g *ParserGenerator) abnf.Operator {
 		if oprt, ok = g.oprts[op.key()]; !ok {
 			panic(fmt.Errorf("unknown ABNF rule '%s'", op.key()))
 		}
-		return oprt(in, pos, ns) //errtrace:skip
+		return oprt(in, pos, ns)
 	}
 }
 
