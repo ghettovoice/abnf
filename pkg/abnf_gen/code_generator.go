@@ -6,7 +6,6 @@ import (
 	"io"
 	"sort"
 
-	"braces.dev/errtrace"
 	"github.com/dave/jennifer/jen"
 	"mvdan.cc/gofumpt/format"
 )
@@ -31,7 +30,7 @@ func (g *CodeGenerator) ReadFrom(src io.Reader) (int64, error) {
 	if g.code.Len() > 0 {
 		g.code.Reset()
 	}
-	return errtrace.Wrap2(g.rulesParser.ReadFrom(src))
+	return g.rulesParser.ReadFrom(src)
 }
 
 // WriteTo generates final Go sources and writes them to dst.
@@ -99,7 +98,7 @@ func (g *CodeGenerator) WriteTo(dst io.Writer) (int64, error) {
 							jen.Id("pos"),
 							jen.Id("ns"),
 						),
-					).Comment("//errtrace:skip"),
+					),
 				).
 				Line()
 			oprsMethods = append(oprsMethods, opStmt)
@@ -129,7 +128,7 @@ func (g *CodeGenerator) WriteTo(dst io.Writer) (int64, error) {
 							jen.Lit(0),
 							jen.Id("ns"),
 						),
-					).Comment("//errtrace:skip"),
+					),
 				).
 				Line()
 			rulesMethods = append(rulesMethods, ruleStmt)
@@ -172,14 +171,14 @@ func (g *CodeGenerator) WriteTo(dst io.Writer) (int64, error) {
 		f.Add(rulesMethods...)
 
 		if err := f.Render(&g.code); err != nil {
-			return 0, errtrace.Wrap(fmt.Errorf("generate code: %w", err))
+			return 0, fmt.Errorf("generate code: %w", err)
 		}
 
 		if src, err := format.Source(g.code.Bytes(), format.Options{ExtraRules: true}); err == nil {
 			g.code.Reset()
 			g.code.Write(src)
 		} else {
-			return 0, errtrace.Wrap(fmt.Errorf("format code: %w", err))
+			return 0, fmt.Errorf("format code: %w", err)
 		}
 	}
 
@@ -187,7 +186,7 @@ func (g *CodeGenerator) WriteTo(dst io.Writer) (int64, error) {
 	if err != nil {
 		err = fmt.Errorf("write code: %w", err)
 	}
-	return int64(num), errtrace.Wrap(err)
+	return int64(num), err
 }
 
 func (g *CodeGenerator) oprtKey(key string) string {

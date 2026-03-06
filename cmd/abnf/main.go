@@ -86,7 +86,7 @@ const defaultConfPath = "abnf.yml"
 func configAction(_ context.Context, cmd *cli.Command) error {
 	wd, err := os.Getwd()
 	if err != nil {
-		return cli.Exit(fmt.Errorf("get working directory: %w", err), 1) //errtrace:skip
+		return cli.Exit(fmt.Errorf("get working directory: %w", err), 1)
 	}
 
 	confPath := defaultConfPath
@@ -102,19 +102,19 @@ func configAction(_ context.Context, cmd *cli.Command) error {
 			v := "no"
 			fmt.Printf("File %s is already exist. Overwrite? (y, N)\n", confPath)
 			if _, err := fmt.Scanln(&v); err != nil {
-				return cli.Exit(fmt.Errorf("read user input: %w", err), 1) //errtrace:skip
+				return cli.Exit(fmt.Errorf("read user input: %w", err), 1)
 			}
 
 			switch strings.ToLower(v) {
 			case "0", "n", "no":
-				return cli.Exit(fmt.Errorf("config generation canceled"), 1) //errtrace:skip
+				return cli.Exit(fmt.Errorf("config generation canceled"), 1)
 			}
 		}
 	}
 
 	fd, err := os.OpenFile(confPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return cli.Exit(fmt.Errorf("open output file: %w", err), 1) //errtrace:skip
+		return cli.Exit(fmt.Errorf("open output file: %w", err), 1)
 	}
 	defer fd.Close() //nolint:errcheck
 
@@ -134,7 +134,7 @@ external:
 `,
 	))
 	if err != nil {
-		return cli.Exit(fmt.Errorf("write config file: %w", err), 1) //errtrace:skip
+		return cli.Exit(fmt.Errorf("write config file: %w", err), 1)
 	}
 
 	if cmd.Bool("verbose") {
@@ -147,7 +147,7 @@ external:
 func generateAction(_ context.Context, cmd *cli.Command) error {
 	wd, err := os.Getwd()
 	if err != nil {
-		return cli.Exit(fmt.Errorf("get working directory: %w", err), 1) //errtrace:skip
+		return cli.Exit(fmt.Errorf("get working directory: %w", err), 1)
 	}
 
 	// read config
@@ -164,12 +164,12 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 
 	buf, err := os.ReadFile(confPath)
 	if err != nil {
-		return cli.Exit(fmt.Errorf("read config file: %w", err), 1) //errtrace:skip
+		return cli.Exit(fmt.Errorf("read config file: %w", err), 1)
 	}
 
 	cfg, err := parseConfig(buf)
 	if err != nil {
-		return cli.Exit(err, 1) //errtrace:skip
+		return cli.Exit(err, 1)
 	}
 
 	if cmd.Bool("verbose") {
@@ -202,7 +202,7 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 		}
 	}
 	if len(errs) > 0 {
-		return cli.Exit(errors.Join(errs...), 1) //errtrace:skip
+		return cli.Exit(errors.Join(errs...), 1)
 	}
 
 	// read, parse input ABNF files
@@ -228,7 +228,7 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 		}
 	}
 	if len(errs) > 0 {
-		return cli.Exit(errors.Join(errs...), 1) //errtrace:skip
+		return cli.Exit(errors.Join(errs...), 1)
 	}
 
 	// write Go sources to output file
@@ -243,24 +243,24 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 			v := "no"
 			fmt.Printf("File %s is already exist. Overwrite? (y, N)\n", outPath)
 			if _, err := fmt.Scanln(&v); err != nil {
-				return cli.Exit(fmt.Errorf("read user input: %w", err), 1) //errtrace:skip
+				return cli.Exit(fmt.Errorf("read user input: %w", err), 1)
 			}
 
 			switch strings.ToLower(v) {
 			case "0", "n", "no":
-				return cli.Exit(fmt.Errorf("code generation canceled"), 1) //errtrace:skip
+				return cli.Exit(fmt.Errorf("code generation canceled"), 1)
 			}
 		}
 	}
 
 	fd, err := os.OpenFile(outPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return cli.Exit(fmt.Errorf("open output file: %w", err), 1) //errtrace:skip
+		return cli.Exit(fmt.Errorf("open output file: %w", err), 1)
 	}
 	defer fd.Close() //nolint:errcheck
 
 	if _, err := g.WriteTo(fd); err != nil {
-		return cli.Exit(fmt.Errorf("write generated code to file %s: %w", outPath, err), 1) //errtrace:skip
+		return cli.Exit(fmt.Errorf("write generated code to file %s: %w", outPath, err), 1)
 	}
 
 	if cmd.Bool("verbose") {

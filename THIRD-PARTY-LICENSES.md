@@ -4,12 +4,6 @@ This project uses the following open-source dependencies:
 
 ## Direct Dependencies
 
-### braces.dev/errtrace (v0.4.0)
-
-- **License**: BSD-3-Clause
-- **Repository**: <https://github.com/bracesdev/errtrace>
-- **Copyright**: Copyright (c) Braces Dev
-
 ### github.com/dave/jennifer (v1.7.1)
 
 - **License**: MIT

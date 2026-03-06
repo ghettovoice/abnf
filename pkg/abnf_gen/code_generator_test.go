@@ -151,7 +151,7 @@ func (desc *OperatorsDescr) Struct(in []byte, pos uint, ns *abnf.Nodes) error {
 			abnf.Range("%x61-7A", []byte{97}, []byte{122}),
 		)
 	})
-	return desc._struct(in, pos, ns) //errtrace:skip
+	return desc._struct(in, pos, ns)
 }
 
 // Type operator: type = "0" / "1"
@@ -163,7 +163,7 @@ func (desc *OperatorsDescr) Type(in []byte, pos uint, ns *abnf.Nodes) error {
 			abnf.Literal("\"1\"", []byte{49}),
 		)
 	})
-	return desc._type(in, pos, ns) //errtrace:skip
+	return desc._type(in, pos, ns)
 }
 
 // Var operator: var = type / struct
@@ -175,7 +175,7 @@ func (desc *OperatorsDescr) Var(in []byte, pos uint, ns *abnf.Nodes) error {
 			desc.Struct,
 		)
 	})
-	return desc._var(in, pos, ns) //errtrace:skip
+	return desc._var(in, pos, ns)
 }
 
 // RulesDescr defines rules descriptor that provides rules as methods.
@@ -183,17 +183,17 @@ type RulesDescr struct{}
 
 // Struct rule: struct = %x41-5A / %x61-7A
 func (*RulesDescr) Struct(in []byte, ns *abnf.Nodes) error {
-	return oprsDescr.Struct(in, 0, ns) //errtrace:skip
+	return oprsDescr.Struct(in, 0, ns)
 }
 
 // Type rule: type = "0" / "1"
 func (*RulesDescr) Type(in []byte, ns *abnf.Nodes) error {
-	return oprsDescr.Type(in, 0, ns) //errtrace:skip
+	return oprsDescr.Type(in, 0, ns)
 }
 
 // Var rule: var = type / struct
 func (*RulesDescr) Var(in []byte, ns *abnf.Nodes) error {
-	return oprsDescr.Var(in, 0, ns) //errtrace:skip
+	return oprsDescr.Var(in, 0, ns)
 }
 `
 
@@ -283,7 +283,7 @@ func (desc *OperatorsDescr) R1(in []byte, pos uint, ns *abnf.Nodes) error {
 			abnf.Literal("\"4\"", []byte{52}),
 		)
 	})
-	return desc.r1(in, pos, ns) //errtrace:skip
+	return desc.r1(in, pos, ns)
 }
 
 // R2 operator: r2 = BIT / ALPHA
@@ -295,7 +295,7 @@ func (desc *OperatorsDescr) R2(in []byte, pos uint, ns *abnf.Nodes) error {
 			desc.ALPHA,
 		)
 	})
-	return desc.r2(in, pos, ns) //errtrace:skip
+	return desc.r2(in, pos, ns)
 }
 
 // RulesDescr defines rules descriptor that provides rules as methods.
@@ -303,12 +303,12 @@ type RulesDescr struct{}
 
 // R1 rule: r1 = r2 / "2" / "3" / "4"
 func (*RulesDescr) R1(in []byte, ns *abnf.Nodes) error {
-	return oprsDescr.R1(in, 0, ns) //errtrace:skip
+	return oprsDescr.R1(in, 0, ns)
 }
 
 // R2 rule: r2 = BIT / ALPHA
 func (*RulesDescr) R2(in []byte, ns *abnf.Nodes) error {
-	return oprsDescr.R2(in, 0, ns) //errtrace:skip
+	return oprsDescr.R2(in, 0, ns)
 }
 `
 

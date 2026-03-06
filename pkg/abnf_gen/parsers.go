@@ -11,7 +11,6 @@ import (
 	"strings"
 	"unicode"
 
-	"braces.dev/errtrace"
 	"github.com/ghettovoice/abnf"
 	"github.com/ghettovoice/abnf/pkg/abnf_def"
 )
@@ -23,7 +22,7 @@ type rulesParser struct {
 func (p *rulesParser) ReadFrom(src io.Reader) (int64, error) {
 	s, err := io.ReadAll(src)
 	if err != nil {
-		return 0, errtrace.Wrap(fmt.Errorf("read source: %w", err))
+		return 0, fmt.Errorf("read source: %w", err)
 	}
 
 	if !bytes.HasSuffix(s, []byte("\n")) {
@@ -32,7 +31,7 @@ func (p *rulesParser) ReadFrom(src io.Reader) (int64, error) {
 
 	rules, err := parseRules(s)
 	if err != nil {
-		return int64(len(s)), errtrace.Wrap(fmt.Errorf("parse source: %w", err))
+		return int64(len(s)), fmt.Errorf("parse source: %w", err)
 	}
 
 	if p.rules == nil {
@@ -231,11 +230,11 @@ func parseRules(s []byte) (map[string]rule, error) {
 	ns := abnf.NewNodes()
 	defer ns.Free()
 	if err := abnf_def.Rules().Rulelist(s, ns); err != nil {
-		return nil, errtrace.Wrap(fmt.Errorf("parse rules: %w", err))
+		return nil, fmt.Errorf("parse rules: %w", err)
 	}
 	n := ns.Best()
 	if n.Len() < len(s) {
-		return nil, errtrace.Wrap(fmt.Errorf("source isn't fully consumed, best match length %d != source length %d", n.Len(), len(s)))
+		return nil, fmt.Errorf("source isn't fully consumed, best match length %d != source length %d", n.Len(), len(s))
 	}
 	return parseRuleslistNode(n), nil
 }
