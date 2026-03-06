@@ -37,7 +37,7 @@ Use `abnf -h` to see global flags and `abnf help <command>` for command-specific
 The generated YAML config contains the following fields:
 
 | Field | Description |
-|-------|-------------|
+| ----- | ----------- |
 | `inputs` | List of ABNF files to parse (paths are relative to the config file). |
 | `package` | Package name for the generated Go code. |
 | `output` | Destination Go file path (relative to the config file). |
@@ -46,7 +46,7 @@ The generated YAML config contains the following fields:
 ## Commands
 
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `abnf config [path]` | Writes a starter configuration file. Defaults to `./abnf.yml`. |
 | `abnf generate [path]` | Generates Go sources per the configuration. |
 | `abnf version` | Prints the CLI version (mirrors library `VERSION`). |

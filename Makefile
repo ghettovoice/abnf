@@ -10,11 +10,15 @@ install:
 	go install ./cmd/...
 
 test:
-	go test -race -vet=all -covermode=atomic -coverprofile=cover.out ./$(PKG)
+	go test -race -vet=all -timeout=30s -covermode=atomic -coverprofile=cover.out ./$(PKG)
 
 lint:
-	go tool golangci-lint run ./...
-	go tool govulncheck ./...
+	golangci-lint run ./...
+
+vuln:
+	govulncheck ./...
+
+check: test lint vuln
 
 cov:
 	go tool cover -html=./cover.out

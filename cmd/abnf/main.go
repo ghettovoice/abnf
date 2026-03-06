@@ -116,7 +116,7 @@ func configAction(_ context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return cli.Exit(fmt.Errorf("open output file: %w", err), 1) //errtrace:skip
 	}
-	defer fd.Close()
+	defer fd.Close() //nolint:errcheck
 
 	_, err = fd.Write([]byte(
 		`# input ABNF files
@@ -216,12 +216,12 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 		}
 
 		if _, err = g.ReadFrom(fd); err != nil {
-			fd.Close()
+			fd.Close() //nolint:errcheck
 			errs = append(errs, fmt.Errorf("parse ABNF file %s: %w", in, err))
 			continue
 		}
 
-		fd.Close()
+		fd.Close() //nolint:errcheck
 
 		if cmd.Bool("verbose") {
 			fmt.Printf("ABNF file %s parsed\n", in)
@@ -257,7 +257,7 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return cli.Exit(fmt.Errorf("open output file: %w", err), 1) //errtrace:skip
 	}
-	defer fd.Close()
+	defer fd.Close() //nolint:errcheck
 
 	if _, err := g.WriteTo(fd); err != nil {
 		return cli.Exit(fmt.Errorf("write generated code to file %s: %w", outPath, err), 1) //errtrace:skip
