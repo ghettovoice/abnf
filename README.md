@@ -78,8 +78,8 @@ func main() {
 
 ## Packages
 
-| Package | Description |
-|---------|-------------|
+| Package | Description. |
+| ------- | ------------ |
 | [`github.com/ghettovoice/abnf`](https://pkg.go.dev/github.com/ghettovoice/abnf) | Core operators, node utilities, and error helpers. |
 | [`pkg/abnf_core`](./pkg/abnf_core) | Generated implementation of RFC 5234 Appendix B core rules. |
 | [`pkg/abnf_def`](./pkg/abnf_def) | Generated implementation of the main ABNF grammar rules. |
@@ -99,8 +99,7 @@ The [`abnf` CLI](./cmd/abnf/README.md) scaffolds configs and generates Go code f
 Issues and pull requests are welcome. To get started:
 
 ```bash
-make test
-make lint
+make check
 make bench
 ```
 

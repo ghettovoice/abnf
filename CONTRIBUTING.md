@@ -77,6 +77,10 @@ make install
    ```bash
    make test
    make lint
+   make vuln
+
+   # or run all at once
+   make check
    ```
 
 4. **Commit your changes** with a clear and descriptive commit message:
