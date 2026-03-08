@@ -4,12 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"net/mail"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/urfave/cli/v3"
+	"golang.org/x/tools/go/packages"
+	"gopkg.in/yaml.v3"
 
 	"github.com/ghettovoice/abnf"
 	"github.com/ghettovoice/abnf/pkg/abnf_gen"
@@ -59,6 +64,12 @@ func main() {
 				},
 				ArgsUsage: "[path]",
 				Action:    generateAction,
+			},
+			{
+				Name:    "generate2",
+				Aliases: []string{"gen2"},
+				Usage:   "generates Go sources from ABNF rules without yaml config",
+				Action:  generateAction2,
 			},
 		},
 		Flags: []cli.Flag{
@@ -112,7 +123,7 @@ func configAction(_ context.Context, cmd *cli.Command) error {
 		}
 	}
 
-	fd, err := os.OpenFile(confPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	fd, err := os.OpenFile(confPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return cli.Exit(fmt.Errorf("open output file: %w", err), 1)
 	}
@@ -253,7 +264,126 @@ func generateAction(_ context.Context, cmd *cli.Command) error {
 		}
 	}
 
-	fd, err := os.OpenFile(outPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	fd, err := os.OpenFile(outPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
+	if err != nil {
+		return cli.Exit(fmt.Errorf("open output file: %w", err), 1) //errtrace:skip
+	}
+	defer fd.Close()
+
+	if _, err := g.WriteTo(fd); err != nil {
+		return cli.Exit(fmt.Errorf("write generated code to file %s: %w", outPath, err), 1) //errtrace:skip
+	}
+
+	if cmd.Bool("verbose") {
+		fmt.Printf("generated code written to file %s\n", outPath)
+	}
+
+	return nil
+}
+
+var externalCore = []string{
+	"ALPHA", "BIT", "CHAR", "CR",
+	"CRLF", "CTL", "DIGIT", "DQUOTE",
+	"HEXDIG", "HTAB", "LF", "LWSP",
+	"OCTET", "SP", "VCHAR", "WSP",
+}
+
+func generateAction2(_ context.Context, cmd *cli.Command) error {
+	astCfg := &packages.Config{
+		Mode: packages.LoadAllSyntax,
+		ParseFile: func(fset *token.FileSet, filename string, src []byte) (*ast.File, error) {
+			return parser.ParseFile(fset, filename, src, parser.ParseComments)
+		},
+	}
+
+	pkgs, err := packages.Load(astCfg, "./...")
+	if err != nil {
+		return err
+	}
+
+	wd := pkgs[0].Dir
+
+	// setup CodeGenerator
+	g := abnf_gen.CodeGenerator{
+		PackageName: pkgs[0].Name,
+	}
+
+	g.External = make(map[string]abnf_gen.ExternalRule)
+	for _, rule := range externalCore {
+		g.External[rule] = abnf_gen.ExternalRule{
+			PackagePath: "github.com/ghettovoice/abnf/pkg/abnf_core",
+			PackageName: "abnf_core",
+		}
+	}
+
+	configText := ""
+	for _, p := range pkgs {
+		for _, file := range p.Syntax {
+			if ast.IsGenerated(file) {
+				continue
+			}
+			for _, c := range file.Comments {
+				if c == file.Doc {
+					continue
+				}
+				if strings.Contains(c.Text(), "external:") {
+					configText = c.Text()
+					break
+				}
+			}
+		}
+	}
+
+	if configText != "" {
+		var cfg config
+		if err := yaml.Unmarshal([]byte(configText), &cfg); err != nil {
+			return fmt.Errorf("parse config: %w", err)
+		}
+
+		for _, moreExt := range cfg.External {
+			for _, rule := range moreExt.Rules {
+				g.External[rule] = abnf_gen.ExternalRule{
+					PackagePath: moreExt.Path,
+					PackageName: moreExt.Name,
+				}
+			}
+		}
+	}
+
+	var errs []error
+
+	// read, parse input ABNF files
+	files, _ := filepath.Glob(filepath.Join(wd, "*.abnf"))
+	for _, in := range files {
+		fd, err := os.Open(in)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("open ABNF file: %w", err))
+			continue
+		}
+
+		if _, err = g.ReadFrom(fd); err != nil {
+			fd.Close()
+			errs = append(errs, fmt.Errorf("parse ABNF file %s: %w", in, err))
+			continue
+		}
+
+		fd.Close()
+
+		if cmd.Bool("verbose") {
+			fmt.Printf("ABNF file %s parsed\n", in)
+		}
+	}
+
+	if len(errs) > 0 {
+		return cli.Exit(errors.Join(errs...), 1) //errtrace:skip
+	}
+
+	// write Go sources to output file
+	outPath := g.PackageName + "_abnf.go"
+
+	outPath = makePath(outPath, pkgs[0].Dir)
+
+	fd, err := os.OpenFile(outPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return cli.Exit(fmt.Errorf("open output file: %w", err), 1)
 	}
