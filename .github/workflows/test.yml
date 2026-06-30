@@ -22,7 +22,7 @@ jobs:
             - name: Set up project
               run: go mod tidy
             - name: Lint
-              uses: golangci/golangci-lint-action@v9
+              uses: golangci/golangci-lint-action@v9.2.1
               with:
                   version: latest
     vulncheck:
