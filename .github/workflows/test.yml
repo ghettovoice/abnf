@@ -16,7 +16,7 @@ jobs:
         steps:
             - uses: actions/checkout@v7.0.0
             - name: Set up Go
-              uses: actions/setup-go@v6
+              uses: actions/setup-go@v6.5.0
               with:
                   go-version: stable
             - name: Set up project
@@ -31,7 +31,7 @@ jobs:
         steps:
             - uses: actions/checkout@v7.0.0
             - name: Set up Go
-              uses: actions/setup-go@v6
+              uses: actions/setup-go@v6.5.0
               with:
                   go-version: stable
             - name: Install govulncheck
@@ -46,7 +46,7 @@ jobs:
         steps:
             - uses: actions/checkout@v7.0.0
             - name: Set up Go
-              uses: actions/setup-go@v6
+              uses: actions/setup-go@v6.5.0
               with:
                   go-version: stable
             - name: Set up project
@@ -64,7 +64,7 @@ jobs:
         steps:
             - uses: actions/checkout@v7.0.0
             - name: Set up Go
-              uses: actions/setup-go@v6
+              uses: actions/setup-go@v6.5.0
               with:
                   go-version: stable
             - name: Install
