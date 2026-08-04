@@ -9,7 +9,7 @@ require (
 	github.com/urfave/cli/v3 v3.10.1
 	golang.org/x/tools v0.48.0
 	gopkg.in/yaml.v3 v3.0.1
-	mvdan.cc/gofumpt v0.10.0
+	mvdan.cc/gofumpt v0.11.0
 )
 
 require (
