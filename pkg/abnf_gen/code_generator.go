@@ -174,7 +174,10 @@ func (g *CodeGenerator) WriteTo(dst io.Writer) (int64, error) {
 			return 0, fmt.Errorf("generate code: %w", err)
 		}
 
-		if src, err := format.Source(g.code.Bytes(), format.Options{ExtraRules: true}); err == nil {
+		extra := format.Extra{
+			GroupParams: true,
+		}
+		if src, err := format.Source(g.code.Bytes(), format.Options{Extra: extra}); err == nil {
 			g.code.Reset()
 			g.code.Write(src)
 		} else {
