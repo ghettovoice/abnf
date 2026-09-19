@@ -4,7 +4,7 @@
 
 ## Overview
 
-- Generated from the upstream `rules.abnf` file using the [`cmd/abnf`](../../cmd/abnf) CLI.
+- Generated from this package's `rules.abnf` file using the [`cmd/abnf`](../../cmd/abnf) CLI.
 - Exposes both operator factories (returning `abnf.Operator`) and rule wrappers (returning `abnf.Rule`).
 - Lazily initialises every rule the first time it is used to keep startup fast.
 

@@ -37,7 +37,7 @@ Please be respectful and considerate in all interactions. We aim to maintain a w
 
 ### Prerequisites
 
-- Go 1.24 or later
+- Go 1.26 or later
 - Make
 
 ### Setup

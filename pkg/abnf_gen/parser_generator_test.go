@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+
 	"github.com/ghettovoice/abnf"
 	"github.com/ghettovoice/abnf/pkg/abnf_core"
 	"github.com/ghettovoice/abnf/pkg/abnf_gen"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestParserGenerator_Operators(t *testing.T) {

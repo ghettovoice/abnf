@@ -5,8 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ghettovoice/abnf/pkg/abnf_gen"
 	"github.com/google/go-cmp/cmp"
+
+	"github.com/ghettovoice/abnf/pkg/abnf_gen"
 )
 
 func TestCodeGenerator_WriteTo(t *testing.T) {

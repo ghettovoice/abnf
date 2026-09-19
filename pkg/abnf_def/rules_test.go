@@ -18,7 +18,8 @@ func TestRulesDescr_Rule(t *testing.T) {
 		{"rule 2", "ALPHA  = %x41-5A / %x61-7A ; A-Z / a-z\r\n", "ALPHA  = %x41-5A / %x61-7A ; A-Z / a-z\r\n"},
 		{"rule 3", "DQUOTE = %x22\r\n       ; \" (Double Quote)\r\n", "DQUOTE = %x22\r\n"},
 		{"rule 4", "WSP    = SP / HTAB\r\n", "WSP    = SP / HTAB\r\n"},
-		{"rule 5",
+		{
+			"rule 5",
 			"bin-val = \"b\" 1*BIT\n\t\t\t\t[ 1*(\".\" 1*BIT) / (\"-\" 1*BIT) ]\n",
 			"bin-val = \"b\" 1*BIT\n\t\t\t\t[ 1*(\".\" 1*BIT) / (\"-\" 1*BIT) ]\n",
 		},

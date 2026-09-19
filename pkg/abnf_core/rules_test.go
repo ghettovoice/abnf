@@ -17,7 +17,8 @@ func TestRulesDescr_ALPHA(t *testing.T) {
 		wantNs  *abnf.Nodes
 		wantErr error
 	}{
-		{"lc letter",
+		{
+			"lc letter",
 			[]byte("a"),
 			&abnf.Nodes{
 				{
@@ -30,7 +31,8 @@ func TestRulesDescr_ALPHA(t *testing.T) {
 			},
 			nil,
 		},
-		{"uc letter",
+		{
+			"uc letter",
 			[]byte("Z"),
 			&abnf.Nodes{
 				{
@@ -43,7 +45,8 @@ func TestRulesDescr_ALPHA(t *testing.T) {
 			},
 			nil,
 		},
-		{"not letter",
+		{
+			"not letter",
 			[]byte("0"),
 			nil,
 			abnf.ErrNotMatched,
@@ -87,7 +90,8 @@ func TestRulesDescr_BIT(t *testing.T) {
 		wantNs  *abnf.Nodes
 		wantErr error
 	}{
-		{"0",
+		{
+			"0",
 			[]byte("0"),
 			&abnf.Nodes{
 				{
@@ -100,7 +104,8 @@ func TestRulesDescr_BIT(t *testing.T) {
 			},
 			nil,
 		},
-		{"1",
+		{
+			"1",
 			[]byte("1"),
 			&abnf.Nodes{
 				{
@@ -113,7 +118,8 @@ func TestRulesDescr_BIT(t *testing.T) {
 			},
 			nil,
 		},
-		{"not bit",
+		{
+			"not bit",
 			[]byte("2"),
 			nil,
 			abnf.ErrNotMatched,
@@ -157,21 +163,24 @@ func TestRulesDescr_CHAR(t *testing.T) {
 		wantNs  *abnf.Nodes
 		wantErr error
 	}{
-		{"~",
+		{
+			"~",
 			[]byte("~"),
 			&abnf.Nodes{
 				{Key: "CHAR", Value: []byte("~")},
 			},
 			nil,
 		},
-		{"a",
+		{
+			"a",
 			[]byte("a"),
 			&abnf.Nodes{
 				{Key: "CHAR", Value: []byte("a")},
 			},
 			nil,
 		},
-		{"0",
+		{
+			"0",
 			[]byte("0"),
 			&abnf.Nodes{
 				{Key: "CHAR", Value: []byte("0")},
@@ -217,7 +226,8 @@ func TestRulesDescr_CRLF(t *testing.T) {
 		wantNs  *abnf.Nodes
 		wantErr error
 	}{
-		{"crlf",
+		{
+			"crlf",
 			[]byte("\r\n"),
 			&abnf.Nodes{
 				{
@@ -237,7 +247,8 @@ func TestRulesDescr_CRLF(t *testing.T) {
 			},
 			nil,
 		},
-		{"lf",
+		{
+			"lf",
 			[]byte("\n"),
 			&abnf.Nodes{
 				{
@@ -250,7 +261,8 @@ func TestRulesDescr_CRLF(t *testing.T) {
 			},
 			nil,
 		},
-		{"not crlf",
+		{
+			"not crlf",
 			[]byte("\b"),
 			nil,
 			abnf.ErrNotMatched,
@@ -294,7 +306,8 @@ func TestRulesDescr_CTL(t *testing.T) {
 		wantNs  *abnf.Nodes
 		wantErr error
 	}{
-		{"ctl",
+		{
+			"ctl",
 			[]byte("\u001B"),
 			&abnf.Nodes{
 				{
@@ -346,7 +359,8 @@ func TestRulesDescr_DIGIT(t *testing.T) {
 		wantNs  *abnf.Nodes
 		wantErr error
 	}{
-		{"digit 0",
+		{
+			"digit 0",
 			[]byte("0"),
 			&abnf.Nodes{
 				{
@@ -356,7 +370,8 @@ func TestRulesDescr_DIGIT(t *testing.T) {
 			},
 			nil,
 		},
-		{"digit 9",
+		{
+			"digit 9",
 			[]byte("9"),
 			&abnf.Nodes{
 				{
@@ -366,7 +381,8 @@ func TestRulesDescr_DIGIT(t *testing.T) {
 			},
 			nil,
 		},
-		{"not digit",
+		{
+			"not digit",
 			[]byte("a"),
 			nil,
 			abnf.ErrNotMatched,
@@ -410,7 +426,8 @@ func TestRulesDescr_DQUOTE(t *testing.T) {
 		wantNs  *abnf.Nodes
 		wantErr error
 	}{
-		{"double quote",
+		{
+			"double quote",
 			[]byte("\""),
 			&abnf.Nodes{
 				{
@@ -420,7 +437,8 @@ func TestRulesDescr_DQUOTE(t *testing.T) {
 			},
 			nil,
 		},
-		{"not double quote",
+		{
+			"not double quote",
 			[]byte("a"),
 			nil,
 			abnf.ErrNotMatched,
@@ -464,7 +482,8 @@ func TestRulesDescr_HEXDIG(t *testing.T) {
 		wantNs  *abnf.Nodes
 		wantErr error
 	}{
-		{"hexdig 7",
+		{
+			"hexdig 7",
 			[]byte("7"),
 			&abnf.Nodes{
 				{
@@ -477,7 +496,8 @@ func TestRulesDescr_HEXDIG(t *testing.T) {
 			},
 			nil,
 		},
-		{"hexdig A",
+		{
+			"hexdig A",
 			[]byte("A"),
 			&abnf.Nodes{
 				{
@@ -490,7 +510,8 @@ func TestRulesDescr_HEXDIG(t *testing.T) {
 			},
 			nil,
 		},
-		{"hexdig a",
+		{
+			"hexdig a",
 			[]byte("a"),
 			&abnf.Nodes{
 				{
@@ -503,7 +524,8 @@ func TestRulesDescr_HEXDIG(t *testing.T) {
 			},
 			nil,
 		},
-		{"not hexdig",
+		{
+			"not hexdig",
 			[]byte("z"),
 			nil,
 			abnf.ErrNotMatched,
@@ -547,7 +569,8 @@ func TestRulesDescr_HTAB(t *testing.T) {
 		wantNs  *abnf.Nodes
 		wantErr error
 	}{
-		{"htab",
+		{
+			"htab",
 			[]byte("\t"),
 			&abnf.Nodes{
 				{
@@ -557,7 +580,8 @@ func TestRulesDescr_HTAB(t *testing.T) {
 			},
 			nil,
 		},
-		{"not htab",
+		{
+			"not htab",
 			[]byte("z"),
 			nil,
 			abnf.ErrNotMatched,
@@ -601,7 +625,8 @@ func TestRulesDescr_LWSP(t *testing.T) {
 		wantNs  *abnf.Nodes
 		wantErr error
 	}{
-		{"space",
+		{
+			"space",
 			[]byte(" "),
 			&abnf.Nodes{
 				{
@@ -627,7 +652,8 @@ func TestRulesDescr_LWSP(t *testing.T) {
 			},
 			nil,
 		},
-		{"crlf space",
+		{
+			"crlf space",
 			[]byte("\n "),
 			&abnf.Nodes{
 				{
@@ -706,7 +732,8 @@ func TestRulesDescr_OCTET(t *testing.T) {
 		wantNs  *abnf.Nodes
 		wantErr error
 	}{
-		{"o",
+		{
+			"o",
 			[]byte("o"),
 			&abnf.Nodes{
 				{Key: "OCTET", Value: []byte("o")},
@@ -752,7 +779,8 @@ func TestRulesDescr_VCHAR(t *testing.T) {
 		wantNs  *abnf.Nodes
 		wantErr error
 	}{
-		{"vchar",
+		{
+			"vchar",
 			[]byte("`"),
 			&abnf.Nodes{
 				{Key: "VCHAR", Value: []byte("`")},
@@ -798,7 +826,8 @@ func TestRulesDescr_WSP(t *testing.T) {
 		wantNs  *abnf.Nodes
 		wantErr error
 	}{
-		{"space",
+		{
+			"space",
 			[]byte(" "),
 			&abnf.Nodes{
 				{
@@ -811,7 +840,8 @@ func TestRulesDescr_WSP(t *testing.T) {
 			},
 			nil,
 		},
-		{"htab",
+		{
+			"htab",
 			[]byte("\t"),
 			&abnf.Nodes{
 				{

@@ -158,7 +158,7 @@ var nodeCacheKeyPool = sync.Pool{
 	New: func() any { return &nodeCacheKey{fnv.New64a(), [8]byte{}} },
 }
 
-func newNodeCacheKey(key string, pos uint, len uint, input []byte, ns ...*Node) *nodeCacheKey {
+func newNodeCacheKey(key string, pos, len uint, input []byte, ns ...*Node) *nodeCacheKey {
 	ck := nodeCacheKeyPool.Get().(*nodeCacheKey)
 	ck.writeBase(key, pos, len, input)
 	ck.writeChildKeys(0, ns...)

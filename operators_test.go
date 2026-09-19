@@ -18,7 +18,8 @@ func TestOperator(t *testing.T) {
 		wantNs  *abnf.Nodes
 		wantErr error
 	}{
-		{"literal 1",
+		{
+			"literal 1",
 			abnf.Literal("qwe", []byte("qwe")),
 			[]byte("Qwerty"),
 			&abnf.Nodes{
@@ -26,13 +27,15 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"literal 2",
+		{
+			"literal 2",
 			abnf.Literal("qwe", []byte("qwe")),
 			[]byte("qwabc"),
 			nil,
 			abnf.ErrNotMatched,
 		},
-		{"literal 3",
+		{
+			"literal 3",
 			abnf.Literal("м", []byte("м")),
 			[]byte("МИР"),
 			&abnf.Nodes{
@@ -40,7 +43,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"literal 4",
+		{
+			"literal 4",
 			abnf.LiteralCS("Qwe", []byte("Qwe")),
 			[]byte("Qwerty"),
 			&abnf.Nodes{
@@ -48,20 +52,23 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"literal 5",
+		{
+			"literal 5",
 			abnf.LiteralCS("Qwe", []byte("Qwe")),
 			[]byte("qwerty"),
 			nil,
 			abnf.ErrNotMatched,
 		},
-		{"literal 6",
+		{
+			"literal 6",
 			abnf.Literal("qwerty", []byte("qwerty")),
 			[]byte("qwe"),
 			nil,
 			abnf.ErrNotMatched,
 		},
 
-		{"range 1",
+		{
+			"range 1",
 			abnf.Range("%x61-7A", []byte{97}, []byte{122}),
 			[]byte("qwe"),
 			&abnf.Nodes{
@@ -69,19 +76,22 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"range 2",
+		{
+			"range 2",
 			abnf.Range("%x41-5A", []byte{65}, []byte{90}),
 			[]byte("abc"),
 			nil,
 			abnf.ErrNotMatched,
 		},
-		{"range 3",
+		{
+			"range 3",
 			abnf.Range("%x6121-7A21", []byte{97, 33}, []byte{122, 33}),
 			[]byte("a"),
 			nil,
 			abnf.ErrNotMatched,
 		},
-		{"range 4",
+		{
+			"range 4",
 			abnf.Range("%x5D-10FFFF", []byte{93}, []byte{16, 255, 255}),
 			[]byte("xxx"),
 			&abnf.Nodes{
@@ -90,7 +100,8 @@ func TestOperator(t *testing.T) {
 			nil,
 		},
 
-		{"alt 1",
+		{
+			"alt 1",
 			abnf.Alt(`"a" / "b"`,
 				abnf.Literal("a", []byte("a")),
 				abnf.Literal("b", []byte("b")),
@@ -107,7 +118,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"alt 2",
+		{
+			"alt 2",
 			abnf.Alt(`"a" / "b"`,
 				abnf.Literal("a", []byte("a")),
 				abnf.Literal("b", []byte("b")),
@@ -124,7 +136,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"alt 3",
+		{
+			"alt 3",
 			abnf.Alt(`"a" / "b"`,
 				abnf.Literal("a", []byte("a")),
 				abnf.Literal("b", []byte("b")),
@@ -133,7 +146,8 @@ func TestOperator(t *testing.T) {
 			nil,
 			abnf.ErrNotMatched,
 		},
-		{"alt 4",
+		{
+			"alt 4",
 			abnf.Alt(`"a" / "ab"`, abnf.Literal(`"a"`, []byte("a")), abnf.Literal(`"ab"`, []byte("ab"))),
 			[]byte("abc"),
 			&abnf.Nodes{
@@ -154,7 +168,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"alt 4",
+		{
+			"alt 4",
 			abnf.AltFirst(`"b" / "a" / "ab"`,
 				abnf.Literal(`"b"`, []byte("b")),
 				abnf.Literal(`"a"`, []byte("a")),
@@ -173,7 +188,8 @@ func TestOperator(t *testing.T) {
 			nil,
 		},
 
-		{"concat 1",
+		{
+			"concat 1",
 			abnf.Concat(`"a" "b" "c"`,
 				abnf.Literal("a", []byte("a")),
 				abnf.Literal("b", []byte("b")),
@@ -193,7 +209,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"concat 2",
+		{
+			"concat 2",
 			abnf.Concat(`"a" "b" "c"`,
 				abnf.Literal("a", []byte("a")),
 				abnf.Literal("b", []byte("b")),
@@ -204,7 +221,8 @@ func TestOperator(t *testing.T) {
 			abnf.ErrNotMatched,
 		},
 
-		{"opt 1",
+		{
+			"opt 1",
 			abnf.Optional(`[ "a" ]`, abnf.Literal("a", []byte("a"))),
 			[]byte("abc"),
 			&abnf.Nodes{
@@ -222,7 +240,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"opt 2",
+		{
+			"opt 2",
 			abnf.Optional(`[ "a" ]`, abnf.Literal("a", []byte("a"))),
 			[]byte("b"),
 			&abnf.Nodes{
@@ -234,7 +253,8 @@ func TestOperator(t *testing.T) {
 			nil,
 		},
 
-		{"repeat 1",
+		{
+			"repeat 1",
 			abnf.Repeat(`*1( "a" )`, 0, 1, abnf.Literal("a", []byte("a"))),
 			[]byte("aaa"),
 			&abnf.Nodes{
@@ -252,7 +272,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"repeat 2",
+		{
+			"repeat 2",
 			abnf.Repeat(`*1( "a" )`, 0, 1, abnf.Literal("a", []byte("a"))),
 			[]byte("bbb"),
 			&abnf.Nodes{
@@ -263,13 +284,15 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"repeat 3",
+		{
+			"repeat 3",
 			abnf.Repeat(`2*3( "a" )`, 2, 3, abnf.Literal("a", []byte("a"))),
 			[]byte("a"),
 			nil,
 			abnf.ErrNotMatched,
 		},
-		{"repeat 4",
+		{
+			"repeat 4",
 			abnf.Repeat(`2*3( "a" )`, 2, 3, abnf.Literal("a", []byte("a"))),
 			[]byte("aa"),
 			&abnf.Nodes{
@@ -284,7 +307,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"repeat 5",
+		{
+			"repeat 5",
 			abnf.Repeat(`2*3( "a" )`, 2, 3, abnf.Literal("a", []byte("a"))),
 			[]byte("aaa"),
 			&abnf.Nodes{
@@ -308,7 +332,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"repeat 6",
+		{
+			"repeat 6",
 			abnf.Repeat(`3( "a" )`, 3, 2, abnf.Literal("a", []byte("a"))),
 			[]byte("aaa"),
 			&abnf.Nodes{
@@ -324,13 +349,15 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"repeat 7",
+		{
+			"repeat 7",
 			abnf.RepeatN(`3( "a" )`, 3, abnf.Literal("a", []byte("a"))),
 			[]byte("aa"),
 			nil,
 			abnf.ErrNotMatched,
 		},
-		{"repeat 8",
+		{
+			"repeat 8",
 			abnf.Repeat0Inf(`*( "a" )`, abnf.Literal("a", []byte("a"))),
 			[]byte(""),
 			&abnf.Nodes{
@@ -338,7 +365,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"repeat 9",
+		{
+			"repeat 9",
 			abnf.Repeat0Inf(`*( "a" )`, abnf.Literal("a", []byte("a"))),
 			[]byte("aaa"),
 			&abnf.Nodes{
@@ -373,7 +401,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"repeat 10",
+		{
+			"repeat 10",
 			abnf.Repeat1Inf(`1*( "a" )`, abnf.Literal("a", []byte("a"))),
 			[]byte("aaa"),
 			&abnf.Nodes{
@@ -404,7 +433,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"repeat 11",
+		{
+			"repeat 11",
 			abnf.Repeat1Inf(`1*( "a" )`, abnf.Literal("a", []byte("a"))),
 			[]byte("a"),
 			&abnf.Nodes{
@@ -418,14 +448,16 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"repeat 12",
+		{
+			"repeat 12",
 			abnf.Repeat1Inf(`1*( "a" )`, abnf.Literal("a", []byte("a"))),
 			[]byte(""),
 			nil,
 			abnf.ErrNotMatched,
 		},
 
-		{"combo 1",
+		{
+			"combo 1",
 			abnf.Concat(`[ "a" ] "bc"`,
 				abnf.Optional(`[ "a" ]`, abnf.Literal("a", []byte("a"))),
 				abnf.Literal("bc", []byte("bc")),
@@ -451,7 +483,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"combo 2",
+		{
+			"combo 2",
 			abnf.Concat(`[ "a" ] "abc"`,
 				abnf.Optional(`[ "a" ]`, abnf.Literal("a", []byte("a"))),
 				abnf.Literal("abc", []byte("abc")),
@@ -474,7 +507,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"combo 3",
+		{
+			"combo 3",
 			abnf.Concat(`[ "a" ] "a"`,
 				abnf.Optional(`[ "a" ]`, abnf.Literal("a", []byte("a"))),
 				abnf.Literal("a", []byte("a")),
@@ -500,7 +534,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"combo 4",
+		{
+			"combo 4",
 			abnf.ConcatAll(`[ "a" ] "a"`,
 				abnf.Optional(`[ "a" ]`, abnf.Literal("a", []byte("a"))),
 				abnf.Literal("a", []byte("a")),
@@ -535,7 +570,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"combo 5",
+		{
+			"combo 5",
 			abnf.ConcatAll(`[ "a" ] "a"`,
 				abnf.Optional(`[ "a" ]`, abnf.Literal("a", []byte("a"))),
 				abnf.Literal("a", []byte("a")),
@@ -554,7 +590,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"combo 6",
+		{
+			"combo 6",
 			abnf.Repeat0Inf(`*( [ "a" ] )`, abnf.Optional(`[ "a" ]`, abnf.Literal("a", []byte("a")))),
 			[]byte(""),
 			&abnf.Nodes{
@@ -566,7 +603,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"combo 7",
+		{
+			"combo 7",
 			abnf.Repeat0Inf(`*( [ "a" ] )`, abnf.Optional(`[ "a" ]`, abnf.Literal("a", []byte("a")))),
 			[]byte("aa"),
 			&abnf.Nodes{
@@ -665,7 +703,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"combo 8",
+		{
+			"combo 8",
 			abnf.Concat(`"a" *( "a" / "b" ) "a"`,
 				abnf.Literal("a", []byte("a")),
 				abnf.Repeat0Inf(`*( "a" / "b" )`,
@@ -691,7 +730,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"combo 9",
+		{
+			"combo 9",
 			abnf.Concat(`"a" *( "a" / "b" ) "a"`,
 				abnf.Literal("a", []byte("a")),
 				abnf.Repeat0Inf(`*( "a" / "b" )`,
@@ -731,7 +771,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"combo 10",
+		{
+			"combo 10",
 			abnf.Concat(`"a" *( "a" / "b" ) "a"`,
 				abnf.Literal("a", []byte("a")),
 				abnf.Repeat0Inf(`*( "a" / "b" )`,
@@ -779,7 +820,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"combo 11",
+		{
+			"combo 11",
 			abnf.Concat(`(*"a" / *"b") "a"`,
 				abnf.Alt(`*"a" / *"b"`,
 					abnf.Repeat0Inf(`*"a"`, abnf.Literal("a", []byte("a"))),
@@ -808,7 +850,8 @@ func TestOperator(t *testing.T) {
 			},
 			nil,
 		},
-		{"combo 12",
+		{
+			"combo 12",
 			abnf.Concat(`(*"a" / *"b") "a"`,
 				abnf.Alt(`*"a" / *"b"`,
 					abnf.Repeat0Inf(`*"a"`, abnf.Literal("a", []byte("a"))),

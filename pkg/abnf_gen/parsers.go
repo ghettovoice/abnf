@@ -358,7 +358,7 @@ func parseRepeatNode(n *abnf.Node) (min, max uint) {
 			astrx = true
 		}
 	}
-	return
+	return min, max
 }
 
 func parseElementNode(n *abnf.Node) operator {

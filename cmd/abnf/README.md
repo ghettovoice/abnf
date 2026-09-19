@@ -54,7 +54,7 @@ The generated YAML config contains the following fields:
 | `abnf version` | Prints the CLI version (mirrors library `VERSION`). |
 | `abnf help` | Prints help for a command. |
 
-Global flags include `--verbose` for additional logging and `--y` to skip overwrite prompts.
+The global `--verbose` flag enables additional logging. The `config` and `generate` commands also accept `-y` to skip overwrite prompts.
 
 ## Examples
 
@@ -84,7 +84,7 @@ Add a `//go:generate` directive and optional external configuration comment to y
 ```go
 package my_grammar
 
-//go:generate go tool abnf gen2
+//go:generate abnf gen2
 
 /*
 external:

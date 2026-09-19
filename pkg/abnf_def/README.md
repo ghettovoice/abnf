@@ -4,7 +4,7 @@
 
 ## Overview
 
-- Generated from the upstream `rules.abnf` file using the [`cmd/abnf`](../../cmd/abnf) CLI.
+- Generated from this package's `rules.abnf` file using the [`cmd/abnf`](../../cmd/abnf) CLI.
 - Provides descriptors returning both operators (`abnf.Operator`) and rules (`abnf.Rule`).
 - Handles rule extensions present in the RFCs via generated alternations.
 

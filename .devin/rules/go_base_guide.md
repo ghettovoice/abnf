@@ -412,29 +412,6 @@ This ensures code uses modern Go idioms and stays compatible with the Go version
 - Keep dependencies up to date
 - Review security advisories
 
-## Project-Specific Guidelines
-
-### SIP Protocol Code
-
-- Follow SIP RFC specifications strictly
-- Use appropriate SIP terminology
-- Handle protocol edge cases
-- Maintain protocol compatibility
-
-### Network Code
-
-- Handle network errors gracefully
-- Use appropriate timeouts
-- Implement proper connection management
-- Consider security implications
-
-### Testing Infrastructure
-
-- Use the testing patterns defined in `go_test_guide.md`
-- Maintain test utilities in separate packages
-- Keep tests fast and reliable
-- Use table-driven tests for multiple scenarios
-
 ## Code Review Checklist
 
 - [ ] Code follows naming conventions
